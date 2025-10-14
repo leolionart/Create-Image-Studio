@@ -1,13 +1,13 @@
 
 import { GoogleGenAI, Modality, GenerateContentResponse, Part } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 
 if (!API_KEY) {
-    console.error("API_KEY is not set in environment variables.");
+    throw new Error("VITE_GEMINI_API_KEY is not set in environment variables.");
 }
 
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 interface ImagePart {
     inlineData: {
