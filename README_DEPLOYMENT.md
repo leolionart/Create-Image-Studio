@@ -29,7 +29,11 @@ VITE_GEMINI_API_KEY=your_gemini_api_key_here
    - **Value**: API key của bạn
 7. Nhấn "Save and Deploy"
 
-#### Cách 2: Qua Wrangler CLI
+#### Cách 2: Qua Wrangler CLI (Khuyến khích)
+
+Để có hướng dẫn chi tiết và đầy đủ hơn, xem file [WRANGLER_DEPLOYMENT_GUIDE.md](./WRANGLER_DEPLOYMENT_GUIDE.md)
+
+**Cài đặt và cấu hình nhanh:**
 ```bash
 # Cài đặt Wrangler CLI
 npm install -g wrangler
@@ -37,9 +41,33 @@ npm install -g wrangler
 # Đăng nhập vào Cloudflare
 wrangler login
 
-# Triển khai dự án
+# Tạo project (chỉ lần đầu)
 wrangler pages project create create-image-studio
+
+# Triển khai dự án
+npm run build
 wrangler pages deploy dist --project-name=create-image-studio
+```
+
+**Sử dụng script tự động:**
+```bash
+# Cấp quyền thực thi cho script
+chmod +x deploy.sh
+
+# Deploy với shell script
+npm run deploy:sh
+
+# Hoặc sử dụng Node.js script (tương tác hơn)
+npm run deploy
+```
+
+**Các lệnh deploy khác:**
+```bash
+# Deploy production
+npm run deploy:prod
+
+# Deploy preview
+npm run deploy:preview
 ```
 
 ### 4. Cấu hình Environment Variables trên Cloudflare Pages

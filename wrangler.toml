@@ -1,0 +1,24 @@
+name = "create-image-studio"
+compatibility_date = "2023-05-18"
+
+# Production environment
+[env.production]
+name = "create-image-studio"
+
+# Preview environment
+[env.preview]
+name = "create-image-studio-preview"
+
+# Custom build configuration
+[build]
+command = "npm run build"
+cwd = "."
+watch_dir = "src/"
+
+# Pages configuration
+[pages]
+project_name = "create-image-studio"
+
+# Assets configuration
+[assets]
+directory = "./dist"
