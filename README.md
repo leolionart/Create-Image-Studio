@@ -7,6 +7,7 @@
 Create Image Studio là một phòng thí nghiệm hình ảnh giúp bạn khám phá hơn 110 use case mẫu và tạo ra hình ảnh mới với Gemini chỉ trong vài bước. Dự án được xây dựng bằng React + Vite, Tailwind CSS và một proxy API nhỏ để giao tiếp với Gemini.
 
 ## Mục tiêu dự án
+
 - Giúp người dùng nhanh chóng hình dung các tình huống sử dụng Gemini trong thiết kế, sản phẩm và nội dung.
 - Cung cấp giao diện trực quan để thử nghiệm chỉnh sửa hoặc tạo ảnh từ prompt.
 - Hỗ trợ chia sẻ ý tưởng thông qua bộ sưu tập case được tuyển chọn sẵn.
@@ -14,6 +15,7 @@ Create Image Studio là một phòng thí nghiệm hình ảnh giúp bạn khám
 Xem ứng dụng trên AI Studio: https://ai.studio/apps/drive/111CJF17kj7mSH6BdccOqayg1RoOoTekS
 
 ## Các chức năng chính
+
 - **Bộ sưu tập case**: hơn 110 ví dụ được chia thành nhiều danh mục (Products & Mockups, Scene & Environment, Layout & Design, ...).
 - **Lọc & tìm kiếm**: chọn danh mục hoặc nhập từ khóa để tìm case phù hợp.
 - **Khung xem chi tiết**: xem prompt gốc, tác giả, ảnh đầu vào và ảnh kết quả minh họa.
@@ -21,6 +23,7 @@ Xem ứng dụng trên AI Studio: https://ai.studio/apps/drive/111CJF17kj7mSH6Bd
 - **Hiển thị kết quả**: xem ảnh render được trả về và bất kỳ phản hồi văn bản nào từ mô hình.
 
 ## Cấu trúc và công nghệ
+
 - **React + Vite** cho giao diện người dùng.
 - **Tailwind CSS** để phối màu và tạo layout responsive.
 - **Express.js** (`server.js`) làm máy chủ sản xuất và proxy cho Gemini API.
@@ -30,46 +33,52 @@ Xem ứng dụng trên AI Studio: https://ai.studio/apps/drive/111CJF17kj7mSH6Bd
 ## Hướng dẫn triển khai và sử dụng
 
 ### Yêu cầu
+
 - Docker và Docker Compose
 - Git
 - Google AI Studio API Key
 
 ### Các bước triển khai
-1.  **Clone repository về máy chủ của bạn:**
-    ```bash
-    git clone https://github.com/leolionart/Create-Image-Studio.git
-    cd Create-Image-Studio
-    ```
 
-2.  **Tạo file môi trường `.env`:**
-    Sao chép từ file mẫu và điền API key của bạn.
-    ```bash
-    cp .env.example .env
-    ```
-    Mở file `.env` và chỉnh sửa nội dung:
-    ```env
-    GEMINI_API_KEY=your_google_ai_studio_key_here
-    ```
+1. **Clone repository về máy chủ của bạn:**
 
-3.  **Build và chạy ứng dụng với Docker Compose:**
-    Lệnh này sẽ tự động build Docker image và khởi chạy container ở chế độ nền.
-    ```bash
-    docker-compose up -d --build
-    ```
+   ```bash
+   git clone https://github.com/leolionart/Create-Image-Studio.git
+   cd Create-Image-Studio
+   ```
+2. **Tạo file môi trường `.env`:**
+   Sao chép từ file mẫu và điền API key của bạn.
 
-4.  **Truy cập ứng dụng:**
-    Sau khi hoàn tất, ứng dụng sẽ có thể truy cập tại `http://<your_server_ip>:8080`.
+   ```bash
+   cp .env.example .env
+   ```
+
+   Mở file `.env` và thêm GEMINI_API_KEY:
+
+   ```env
+   nano .env
+   ```
+3. **Build và chạy ứng dụng với Docker Compose:**
+   Lệnh này sẽ tự động build Docker image và khởi chạy container ở chế độ nền.
+
+   ```bash
+   docker compose up -d --build
+   ```
+4. **Truy cập ứng dụng:**
+   Sau khi hoàn tất, ứng dụng sẽ có thể truy cập tại `http://<your_server_ip>:8080`.
 
 ### Phát triển cục bộ (Không dùng Docker)
+
 Nếu bạn muốn chạy ứng dụng trên máy local để phát triển:
-1.  **Yêu cầu:** Node.js 20+.
-2.  **Cài đặt phụ thuộc:**
-    ```bash
-    npm install
-    ```
-3.  **Tạo file `.env`** và thiết lập API key như bước 2 ở trên.
-4.  **Khởi chạy server phát triển:**
-    ```bash
-    npm run dev
-    ```
-    Ứng dụng sẽ chạy tại `http://localhost:5173`.
+
+1. **Yêu cầu:** Node.js 20+.
+2. **Cài đặt phụ thuộc:**
+   ```bash
+   npm install
+   ```
+3. **Tạo file `.env`** và thiết lập API key như bước 2 ở trên.
+4. **Khởi chạy server phát triển:**
+   ```bash
+   npm run dev
+   ```
+   Ứng dụng sẽ chạy tại `http://localhost:5173`.
