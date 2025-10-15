@@ -91,13 +91,15 @@ app.post('/api/gemini', async (req, res) => {
 });
 
 
-// Phục vụ các file tĩnh của React
-app.use(express.static(path.join(__dirname, '..', 'dist')));
+// Serve static files from React app in production
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '..', 'dist')));
 
-// Catch-all để trả về index.html cho các route của React
-app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'));
-});
+    // Catch-all to return index.html for any other request
+    app.get(/.*/, (req, res) => {
+        res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'));
+    });
+}
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
