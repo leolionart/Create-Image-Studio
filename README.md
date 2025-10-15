@@ -64,8 +64,20 @@ Xem ứng dụng trên AI Studio: https://ai.studio/apps/drive/111CJF17kj7mSH6Bd
    ```bash
    docker compose up -d --build
    ```
-4. **Truy cập ứng dụng:**
-   Sau khi hoàn tất, ứng dụng sẽ có thể truy cập tại `http://<your_server_ip>:8080`.
+4.  **Truy cập ứng dụng:**
+    Sau khi hoàn tất, ứng dụng sẽ có thể truy cập tại `http://<your_server_ip>:8080`.
+
+### Cập nhật ứng dụng
+Khi có phiên bản mới, bạn có thể cập nhật ứng dụng bằng các lệnh sau trong thư mục dự án:
+1.  **Tải về các thay đổi mới nhất:**
+    ```bash
+    git pull origin main
+    ```
+2.  **Build lại image và khởi động lại container:**
+    Lệnh `--build` sẽ đảm bảo Docker sử dụng phiên bản code mới nhất để tạo image mới.
+    ```bash
+    docker-compose up -d --build
+    ```
 
 ### Phát triển cục bộ (Không dùng Docker)
 
