@@ -79,15 +79,6 @@ async function deploy() {
             throw new Error('Thư mục dist không tồn tại sau khi build!');
         }
 
-        // Kiểm tra biến môi trường
-        console.log('🔍 Kiểm tra biến môi trường...');
-        try {
-            execCommand('wrangler pages secret list', { stdio: 'pipe' });
-            console.log('✅ Biến môi trường đã được cấu hình\n');
-        } catch (error) {
-            console.log('⚠️  Không thể kiểm tra biến môi trường. Đảm bảo VITE_GEMINI_API_KEY đã được cấu hình\n');
-        }
-
         // Deploy lên Cloudflare Pages
         console.log('🌐 Deploying to Cloudflare Pages...');
         const deployCommand = isPreview 
