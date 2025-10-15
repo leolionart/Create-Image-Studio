@@ -1,0 +1,22 @@
+# Git
+.git
+.gitignore
+
+# Dependencies
+node_modules
+
+# Build output
+dist
+
+# Environment variables
+.env
+.env*
+
+# Wrangler/Cloudflare specific files
+.wrangler
+_worker.bundle
+functions
+
+# IDE and OS files
+.vscode
+.DS_Store
