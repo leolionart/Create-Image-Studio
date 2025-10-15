@@ -92,11 +92,11 @@ app.post('/api/gemini', async (req, res) => {
 
 
 // Phục vụ các file tĩnh của React
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(path.join(__dirname, '..', 'dist')));
 
 // Catch-all để trả về index.html cho các route của React
 app.get('/:path(*)', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'));
 });
 
 app.listen(PORT, () => {
