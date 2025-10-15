@@ -15,13 +15,13 @@ function question(query) {
 
 // Hàm để thực thi lệnh và hiển thị output
 function execCommand(command, options = {}) {
+    const defaultOptions = { stdio: 'inherit', encoding: 'utf8' };
     try {
         console.log(`🔧 Executing: ${command}`);
-        const result = execSync(command, { 
-            stdio: 'inherit', 
-            encoding: 'utf8',
-            ...options 
-        });
+        // Nếu stdio là 'pipe', chúng ta muốn trả về output dưới dạng string
+        // Nếu là 'inherit', output sẽ được hiển thị trực tiếp và result sẽ là null
+        const finalOptions = { ...defaultOptions, ...options };
+        const result = execSync(command, finalOptions);
         return result;
     } catch (error) {
         console.error(`❌ Error executing command: ${command}`);
@@ -99,13 +99,21 @@ async function deploy() {
             ? `${deployCommand} --commit-message="${commitMessage}"`
             : `${deployCommand} --commit-message="Auto deploy $(date '+%Y-%m-%d %H:%M:%S')"`;
         
-        execCommand(finalCommand);
+        // Chuyển sang 'pipe' để lấy output, sau đó in ra
+        const output = execCommand(finalCommand, { stdio: 'pipe' });
+        console.log(output);
 
         console.log('\n✅ Deploy successful!');
         console.log('🌐 Your site is now live at:');
-        console.log(`   Production: https://create-image-studio.pages.dev`);
-        console.log(`   Preview: https://create-image-studio.pages.dev`);
         
+        const previewUrlMatch = output.match(/https?:\/\/[a-f0-9]+\.create-image-studio\.pages\.dev/);
+        const previewUrl = previewUrlMatch ? previewUrlMatch[0] : 'Could not determine preview URL.';
+
+        if (isPreview) {
+            console.log(`   Preview: ${previewUrl}`);
+        }
+        console.log(`   Production: https://create-image-studio.pages.dev`);
+
         console.log('\n📊 Các lệnh hữu ích:');
         console.log('   Xem lịch sử deploy: wrangler pages deployment list --project-name=create-image-studio');
         console.log('   Xem logs: wrangler pages deployment tail --project-name=create-image-studio');

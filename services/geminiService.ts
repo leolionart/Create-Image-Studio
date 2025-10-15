@@ -16,13 +16,23 @@ interface ImagePart {
     };
 }
 
-const fileToGenerativePart = (base64: string, mimeType: string): ImagePart => {
-    return {
-        inlineData: {
-            data: base64,
-            mimeType
-        }
-    };
+const fileToGenerativePart = (base64: string, mimeType: string): ImagePart => ({
+    inlineData: {
+        data: base64,
+        mimeType
+    }
+});
+
+const extractGeminiErrorMessage = (error: unknown): string | null => {
+    if (!error) return null;
+    const apiError = error as { message?: string; response?: { error?: { message?: string } } };
+    if (apiError.response?.error?.message) {
+        return apiError.response.error.message;
+    }
+    if (apiError.message) {
+        return apiError.message;
+    }
+    return null;
 };
 
 export const editImage = async (
@@ -37,8 +47,11 @@ export const editImage = async (
 
         const response: GenerateContentResponse = await ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
-            contents: { parts },
-            config: {
+            contents: [{
+                role: 'user',
+                parts,
+            }],
+            generationConfig: {
                 responseModalities: [Modality.IMAGE, Modality.TEXT],
             },
         });
@@ -66,7 +79,8 @@ export const editImage = async (
 
     } catch (error) {
         console.error("Error editing image with Gemini:", error);
-        throw new Error("Failed to edit image. Please check the console for more details.");
+        const message = extractGeminiErrorMessage(error) ?? "Failed to edit image. Please check the console for more details.";
+        throw new Error(message);
     }
 };
 
@@ -94,6 +108,7 @@ export const generateImageFromText = async (
 
     } catch (error) {
         console.error("Error generating image with Gemini:", error);
-        throw new Error("Failed to generate image. Please check the console for more details.");
+        const message = extractGeminiErrorMessage(error) ?? "Failed to generate image. Please check the console for more details.";
+        throw new Error(message);
     }
 };
