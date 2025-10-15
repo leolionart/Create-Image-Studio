@@ -1,5 +1,0 @@
-{
-  "name": "Creative Image Studio",
-  "description": "An application to explore and experiment with a wide variety of image generation and editing use cases powered by the Gemini API. Users can select a case, upload their own images, modify prompts, and generate new creative visuals.",
-  "requestFramePermissions": []
-}
