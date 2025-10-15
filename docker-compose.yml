@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8008:3001"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
     env_file:

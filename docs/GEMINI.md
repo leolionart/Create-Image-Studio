@@ -50,7 +50,7 @@ This project is configured for easy deployment using Docker Compose.
     ```bash
     docker-compose up -d --build
     ```
-    Docker Compose will build the image, create a container, and run the application. The server is exposed on port `8080`. You can access the application at `http://<your_server_ip>:8080`.
+    Docker Compose will build the image, create a container, and run the application. The server is exposed on port `8008`. You can access the application at `http://<your_server_ip>:8008`.
 
 ## 4. Managing the Application
 
@@ -72,4 +72,4 @@ This project is configured for easy deployment using Docker Compose.
 ## 5. Troubleshooting
 
 -   **API key invalid**: Regenerate the key in Google AI Studio, ensure restrictions are disabled, and update the `.env` file. Remember to restart the container (`docker-compose up -d --build`) for the changes to take effect.
--   **Port conflicts**: If port `8080` is already in use on your server, you can change it in the `docker-compose.yml` file. For example, to use port `8000`, change `ports:` to `"8000:8080"`.
+-   **Port conflicts**: If port `8008` is already in use on your server, you can change it in the `docker-compose.yml` file. For example, to use port `8000`, change `ports:` to `"8000:3001"`.
