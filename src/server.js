@@ -95,7 +95,7 @@ app.post('/api/gemini', async (req, res) => {
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Catch-all để trả về index.html cho các route của React
-app.get('/*', (req, res) => {
+app.get('/:path(*)', (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
