@@ -68,30 +68,13 @@ Xem ứng dụng trên AI Studio: https://ai.studio/apps/drive/111CJF17kj7mSH6Bd
    Sau khi hoàn tất, ứng dụng sẽ có thể truy cập tại `http://<your_server_ip>:8008`.
 
 ### Cập nhật ứng dụng
+Khi có phiên bản mới, bạn có thể cập nhật bằng cách chạy một lệnh duy nhất sau đây trong thư mục dự án. Lệnh này sẽ tự động tải về code mới nhất, xóa mọi thay đổi cục bộ (trừ file `.env`) và build lại Docker image.
 
-Khi có phiên bản mới, bạn có thể cập nhật ứng dụng bằng các lệnh sau trong thư mục dự án:
+**Lưu ý:** Lệnh này sẽ xóa các thay đổi chưa commit trên máy chủ.
 
-1. **Tải về các thay đổi mới nhất mà không áp dụng:**
-   Lệnh này sẽ lấy tất cả các thay đổi từ `origin` (GitHub) về máy chủ.
-
-   ```bash
-   git fetch origin main
-   ```
-2. **Đồng bộ hóa code và xóa mọi thay đổi cục bộ:**
-   Chuỗi lệnh sau sẽ đảm bảo máy chủ của bạn giống hệt với repository.
-
-   * `git reset --hard origin/main`: Buộc branch cục bộ phải giống hệt branch `main` trên `origin`, xóa mọi commit hoặc thay đổi cục bộ.
-   * `git clean -fd`: Xóa tất cả các file và thư mục mới (chưa được theo dõi bởi Git) mà không có trong repository.
-
-   ```bash
-   git reset --hard origin/main && git clean -fd
-   ```
-3. **Build lại image và khởi động lại container:**
-   Lệnh `--build` sẽ đảm bảo Docker sử dụng phiên bản code mới nhất để tạo image mới.
-
-   ```bash
-   docker compose up -d --build
-   ```
+```bash
+git fetch origin main && git reset --hard origin/main && git clean -fd && docker-compose up -d --build
+```
 
 ### Phát triển cục bộ (Không dùng Docker)
 
