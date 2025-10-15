@@ -20,38 +20,56 @@ Xem ứng dụng trên AI Studio: https://ai.studio/apps/drive/111CJF17kj7mSH6Bd
 - **Thử nghiệm nhanh**: tải ảnh đầu vào (nếu case yêu cầu), chỉnh sửa prompt và gửi yêu cầu tới Gemini để tạo kết quả mới.
 - **Hiển thị kết quả**: xem ảnh render được trả về và bất kỳ phản hồi văn bản nào từ mô hình.
 
-## Quy trình sử dụng
-1. Mở ứng dụng và chọn danh mục hoặc dùng thanh tìm kiếm để lọc các case.
-2. Bấm vào một case để mở modal chi tiết.
-3. Đọc prompt mô tả và lưu ý đặc biệt (nếu có) cho case đó.
-4. Tải lên đủ số ảnh đầu vào được yêu cầu hoặc điền prompt nếu case chỉ cần văn bản.
-5. Nhấn `Generate` để gửi yêu cầu. Ảnh kết quả và phản hồi sẽ xuất hiện ở bảng bên phải.
-6. Có thể đóng modal để quay lại danh sách case và thử các ý tưởng khác.
-
-## Chạy ứng dụng cục bộ
-**Yêu cầu:** Node.js (phiên bản LTS khuyến nghị).
-
-1. Cài đặt phụ thuộc:
-   ```bash
-   npm install
-   ```
-2. Tạo file `.env.local` và thiết lập biến môi trường:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key
-   ```
-3. Khởi chạy môi trường phát triển:
-   ```bash
-   npm run dev
-   ```
-4. Mở trình duyệt tại địa chỉ được Vite cung cấp (mặc định `http://localhost:5173`).
-
 ## Cấu trúc và công nghệ
 - **React + Vite** cho giao diện người dùng.
 - **Tailwind CSS** để phối màu và tạo layout responsive.
-- **Gemini API proxy** (`/api/gemini`) xử lý yêu cầu chỉnh sửa/tạo ảnh dựa trên prompt và ảnh đầu vào.
+- **Express.js** (`server.js`) làm máy chủ sản xuất và proxy cho Gemini API.
 - **Dữ liệu case** được quản lý trong `constants.ts`, định nghĩa kiểu trong `types.ts`.
+- **Docker & Docker Compose** để đóng gói và triển khai ứng dụng.
 
-## Gợi ý tiếp theo
-- Tùy chỉnh thêm các case hoặc thêm case mới bằng cách mở rộng `constants.ts`.
-- Triển khai lên môi trường sản xuất bằng `npm run build` và sử dụng `deploy.sh` hoặc `deploy.js` theo nhu cầu hạ tầng của bạn.
+## Hướng dẫn triển khai và sử dụng
 
+### Yêu cầu
+- Docker và Docker Compose
+- Git
+- Google AI Studio API Key
+
+### Các bước triển khai
+1.  **Clone repository về máy chủ của bạn:**
+    ```bash
+    git clone https://github.com/leolionart/Create-Image-Studio.git
+    cd Create-Image-Studio
+    ```
+
+2.  **Tạo file môi trường `.env`:**
+    Sao chép từ file mẫu và điền API key của bạn.
+    ```bash
+    cp .env.example .env
+    ```
+    Mở file `.env` và chỉnh sửa nội dung:
+    ```env
+    GEMINI_API_KEY=your_google_ai_studio_key_here
+    ```
+
+3.  **Build và chạy ứng dụng với Docker Compose:**
+    Lệnh này sẽ tự động build Docker image và khởi chạy container ở chế độ nền.
+    ```bash
+    docker-compose up -d --build
+    ```
+
+4.  **Truy cập ứng dụng:**
+    Sau khi hoàn tất, ứng dụng sẽ có thể truy cập tại `http://<your_server_ip>:8080`.
+
+### Phát triển cục bộ (Không dùng Docker)
+Nếu bạn muốn chạy ứng dụng trên máy local để phát triển:
+1.  **Yêu cầu:** Node.js 20+.
+2.  **Cài đặt phụ thuộc:**
+    ```bash
+    npm install
+    ```
+3.  **Tạo file `.env`** và thiết lập API key như bước 2 ở trên.
+4.  **Khởi chạy server phát triển:**
+    ```bash
+    npm run dev
+    ```
+    Ứng dụng sẽ chạy tại `http://localhost:5173`.

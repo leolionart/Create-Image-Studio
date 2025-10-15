@@ -18,10 +18,10 @@ RUN npm install --omit=dev
 COPY --from=builder /app/dist ./dist
 
 # Copy the server file
-COPY server.js .
+COPY src/server.js .
 
 # Copy project documentation needed inside the container
-COPY README.md .
+COPY README.md ./docs/
 
 # Expose the port the server will run on
 EXPOSE 3001
