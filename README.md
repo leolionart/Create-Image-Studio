@@ -32,31 +32,29 @@ Xem ứng dụng trên AI Studio: https://ai.studio/apps/drive/111CJF17kj7mSH6Bd
 
 ## Hướng dẫn triển khai và sử dụng
 
-### Bước 0: Cài đặt môi trường (Thực hiện một lần trên máy chủ mới)
-**Quan trọng:** Máy chủ của bạn cần được cài đặt Docker và Docker Compose trước khi thực hiện các bước tiếp theo. Đây là yêu cầu bắt buộc.
-
--   Để xem hướng dẫn cài đặt Docker chính thức, vui lòng truy cập: [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/)
-
-Sau khi cài đặt xong, bạn có thể tiến hành các bước sau.
-
 ### Bước 1: Clone repository và cấu hình (Thực hiện một lần)
-1.  **Clone repository về máy chủ của bạn:**
-    ```bash
-    git clone https://github.com/leolionart/Create-Image-Studio.git
-    cd Create-Image-Studio
-    ```
 
-2.  **Tạo file môi trường `.env`:**
-    Sao chép từ file mẫu và điền API key của bạn.
-    ```bash
-    cp .env.example .env
-    ```
-    Mở file `.env` và chỉnh sửa nội dung:
-    ```env
-    GEMINI_API_KEY=your_google_ai_studio_key_here
-    ```
+1. **Clone repository về máy chủ của bạn:**
+
+   ```bash
+   git clone https://github.com/leolionart/Create-Image-Studio.git
+   cd Create-Image-Studio
+   ```
+2. **Tạo file môi trường `.env`:**
+   Sao chép từ file mẫu và điền API key của bạn.
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Mở file `.env` và chỉnh sửa nội dung:
+
+   ```env
+   GEMINI_API_KEY=your_google_ai_studio_key_here
+   ```
 
 ### Bước 2: Khởi chạy hoặc cập nhật ứng dụng
+
 Để khởi chạy lần đầu hoặc cập nhật ứng dụng lên phiên bản mới nhất, bạn chỉ cần chạy một lệnh duy nhất sau đây trong thư mục dự án. Lệnh này sẽ tự động tải về code mới nhất, xóa mọi thay đổi cục bộ (trừ file `.env`) và build lại Docker image.
 
 **Lưu ý:** Lệnh này sẽ xóa các thay đổi chưa commit trên máy chủ.
@@ -66,6 +64,7 @@ git fetch origin main && git reset --hard origin/main && git clean -fd && docker
 ```
 
 ### Bước 3: Truy cập ứng dụng
+
 Sau khi hoàn tất, ứng dụng sẽ có thể truy cập tại `http://<your_server_ip>:8008`.
 
 ### Phát triển cục bộ (Không dùng Docker)
