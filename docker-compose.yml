@@ -3,11 +3,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: ghcr.io/leolionart/create-image-studio:latest
     ports:
       - "8008:3001"
     environment:
       - NODE_ENV=production
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_GEMINI_BASE_URL=${GOOGLE_GEMINI_BASE_URL}
     env_file:
       - .env
     container_name: creative-image-studio

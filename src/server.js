@@ -19,6 +19,8 @@ app.use(express.json({ limit: '10mb' }));
 // API Proxy Endpoint for Gemini
 app.post('/api/gemini', async (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY;
+    const baseUrl = process.env.GOOGLE_GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com';
+
     if (!apiKey) {
         return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
     }
@@ -29,7 +31,7 @@ app.post('/api/gemini', async (req, res) => {
 
     try {
         if (action === 'edit') {
-            upstreamUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`;
+            upstreamUrl = `${baseUrl}/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`;
             const parts = [
                 ...images.map((image) => ({
                     inlineData: { data: image.base64, mimeType: image.mimeType },
@@ -41,7 +43,7 @@ app.post('/api/gemini', async (req, res) => {
                 generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
             };
         } else if (action === 'generate') {
-            upstreamUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:generateImage?key=${apiKey}`;
+            upstreamUrl = `${baseUrl}/v1beta/models/imagen-4.0-generate-001:generateImage?key=${apiKey}`;
             upstreamBody = {
                 prompt: prompt,
                 config: { numberOfImages: 1, outputMimeType: 'image/jpeg' },
