@@ -31,7 +31,8 @@ app.post('/api/gemini', async (req, res) => {
 
     try {
         if (action === 'edit') {
-            upstreamUrl = `${baseUrl}/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`;
+            upstreamUrl = `${baseUrl}/v1beta/models/gemini-2.5-flash-image:generateContent`;
+            console.log('DEBUG: Using upstream URL:', upstreamUrl);
             const parts = [
                 ...images.map((image) => ({
                     inlineData: { data: image.base64, mimeType: image.mimeType },
@@ -43,7 +44,8 @@ app.post('/api/gemini', async (req, res) => {
                 generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
             };
         } else if (action === 'generate') {
-            upstreamUrl = `${baseUrl}/v1beta/models/imagen-4.0-generate-001:generateImage?key=${apiKey}`;
+            upstreamUrl = `${baseUrl}/v1beta/models/imagen-4.0-generate-001:generateImage`;
+            console.log('DEBUG: Using upstream URL:', upstreamUrl);
             upstreamBody = {
                 prompt: prompt,
                 config: { numberOfImages: 1, outputMimeType: 'image/jpeg' },
@@ -54,17 +56,28 @@ app.post('/api/gemini', async (req, res) => {
 
         const upstreamResponse = await fetch(upstreamUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey
+            },
             body: JSON.stringify(upstreamBody),
         });
 
-        const data = await upstreamResponse.json();
+        // Handle empty responses
+        const responseText = await upstreamResponse.text();
+        let data;
+        try {
+            data = responseText ? JSON.parse(responseText) : {};
+        } catch (e) {
+            console.error('Failed to parse response:', responseText);
+            return res.status(500).json({ error: 'Invalid response from API' });
+        }
 
         if (!upstreamResponse.ok) {
             console.error('Error from Gemini API:', data);
             return res.status(upstreamResponse.status).json({ error: data?.error?.message || 'Gemini API request failed.' });
         }
-        
+
         // Trích xuất và gửi lại kết quả cho client
         let responsePayload = {};
         if (action === 'edit') {
