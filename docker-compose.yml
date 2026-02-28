@@ -1,8 +1,5 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: ghcr.io/leolionart/create-image-studio:latest
     ports:
       - "8008:3001"
