@@ -1,10 +1,11 @@
 import React from 'react';
-import { Template } from '../../types';
+import { Template, TemplateStats } from '../../types';
 
 interface GalleryCardProps {
   template: Template;
   onSelect: (template: Template) => void;
   index: number;
+  stats?: TemplateStats;
 }
 
 /** Two stacked <img>: cover (default) crossfades to contain (hover) */
@@ -21,7 +22,8 @@ const RevealImage = ({ src, alt }: { src: string; alt: string }) => (
   </div>
 );
 
-const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index }) => {
+const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index, stats }) => {
+  const hasStats = stats && (stats.copies > 0 || stats.tries > 0);
   const hasInputImages = template.inputImages.length > 0;
   const hasOutputImage = !!template.outputImage;
   const isTextOnly = template.inputsNeeded === 0;
@@ -143,6 +145,22 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index }) 
             </span>
           )}
           <span className="text-xs text-on-surface-variant">{template.author.startsWith('@') ? template.author : `@${template.author}`}</span>
+          {hasStats && (
+            <span className="text-[11px] text-outline flex items-center gap-1.5">
+              {stats!.copies > 0 && (
+                <span className="flex items-center gap-0.5">
+                  <span className="material-symbols-outlined" style={{ fontSize: 13 }}>content_copy</span>
+                  {stats!.copies}
+                </span>
+              )}
+              {stats!.tries > 0 && (
+                <span className="flex items-center gap-0.5">
+                  <span className="material-symbols-outlined" style={{ fontSize: 13 }}>play_arrow</span>
+                  {stats!.tries}
+                </span>
+              )}
+            </span>
+          )}
           {template.inputsNeeded > 0 && (
             <span className="ml-auto text-[11px] text-outline flex items-center gap-0.5">
               <span className="material-symbols-outlined" style={{ fontSize: 14 }}>photo_library</span>

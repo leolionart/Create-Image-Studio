@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Template } from './types';
-import { fetchTemplates } from './services/templateService';
+import { Template, TemplateStats, SortOption } from './types';
+import { fetchTemplates, trackTemplateUsage } from './services/templateService';
 import { editImage, generateImageFromText, loadApiSettings } from './services/geminiService';
 import GalleryShell from './components/layout/GalleryShell';
 import FilterBar from './components/gallery/FilterBar';
@@ -21,6 +21,8 @@ const App: React.FC = () => {
 
   // Gallery filter state
   const [activeCategory, setActiveCategory] = useState('All');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [templateStats, setTemplateStats] = useState<Record<string, TemplateStats>>({});
 
   // Dialog state
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
@@ -68,6 +70,7 @@ const App: React.FC = () => {
       .then(data => {
         setTemplates(data.templates);
         setCategories(data.categories);
+        setTemplateStats(data.stats || {});
       })
       .catch(err => console.error('Failed to load templates:', err))
       .finally(() => setIsLoadingTemplates(false));
@@ -82,14 +85,43 @@ const App: React.FC = () => {
     return counts;
   }, [templates]);
 
-  // Filtered templates
+  // Filtered & sorted templates
   const filtered = useMemo(() => {
     let result = templates;
     if (activeCategory !== 'All') {
       result = result.filter(t => t.category === activeCategory);
     }
-    return [...result].reverse();
-  }, [templates, activeCategory]);
+    const sorted = [...result];
+    const getStat = (id: number) => templateStats[String(id)] || { copies: 0, tries: 0 };
+    switch (sortBy) {
+      case 'newest':
+        sorted.reverse();
+        break;
+      case 'popular':
+        sorted.sort((a, b) => {
+          const sa = getStat(a.id), sb = getStat(b.id);
+          return (sb.copies + sb.tries) - (sa.copies + sa.tries);
+        });
+        break;
+      case 'most-copied':
+        sorted.sort((a, b) => getStat(b.id).copies - getStat(a.id).copies);
+        break;
+      case 'most-tried':
+        sorted.sort((a, b) => getStat(b.id).tries - getStat(a.id).tries);
+        break;
+    }
+    return sorted;
+  }, [templates, activeCategory, sortBy, templateStats]);
+
+  // Optimistic stat update helper
+  const bumpStat = useCallback((id: number, action: 'copy' | 'try') => {
+    setTemplateStats(prev => {
+      const key = String(id);
+      const old = prev[key] || { copies: 0, tries: 0 };
+      return { ...prev, [key]: { ...old, [action === 'copy' ? 'copies' : 'tries']: (action === 'copy' ? old.copies : old.tries) + 1 } };
+    });
+    trackTemplateUsage(id, action);
+  }, []);
 
   // Gallery handlers
   const handleOpenDetail = useCallback((template: Template) => {
@@ -103,13 +135,14 @@ const App: React.FC = () => {
 
   const handleTryIt = useCallback(() => {
     if (!selectedTemplate) return;
+    bumpStat(selectedTemplate.id, 'try');
     setPrompt(selectedTemplate.prompt);
     setUploadedImages(new Array(selectedTemplate.inputsNeeded).fill(null));
     setResult(null);
     setError(null);
     setDetailOpen(false);
     setTryItOpen(true);
-  }, [selectedTemplate]);
+  }, [selectedTemplate, bumpStat]);
 
   const handleCloseTryIt = useCallback(() => {
     setTryItOpen(false);
@@ -198,11 +231,14 @@ const App: React.FC = () => {
           templateCounts={templateCounts}
           totalCount={templates.length}
           onOpenAISearch={() => setSearchOpen(true)}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
         />
         <GalleryGrid
           templates={filtered}
           onSelectTemplate={handleOpenDetail}
           isLoading={isLoadingTemplates}
+          templateStats={templateStats}
         />
       </GalleryShell>
 
@@ -211,6 +247,8 @@ const App: React.FC = () => {
         isOpen={detailOpen}
         onClose={handleCloseDetail}
         onTryIt={handleTryIt}
+        stats={selectedTemplate ? templateStats[String(selectedTemplate.id)] : undefined}
+        onTrackCopy={selectedTemplate ? () => bumpStat(selectedTemplate.id, 'copy') : undefined}
       />
 
       <TryItDialog

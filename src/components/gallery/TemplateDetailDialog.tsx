@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Template } from '../../types';
+import { Template, TemplateStats } from '../../types';
 
 interface TemplateDetailDialogProps {
   template: Template | null;
   isOpen: boolean;
   onClose: () => void;
   onTryIt: () => void;
+  stats?: TemplateStats;
+  onTrackCopy?: () => void;
 }
 
-const TemplateDetailDialog: React.FC<TemplateDetailDialogProps> = ({ template, isOpen, onClose, onTryIt }) => {
+const TemplateDetailDialog: React.FC<TemplateDetailDialogProps> = ({ template, isOpen, onClose, onTryIt, stats, onTrackCopy }) => {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -31,6 +33,7 @@ const TemplateDetailDialog: React.FC<TemplateDetailDialogProps> = ({ template, i
   const handleCopyPrompt = async () => {
     await navigator.clipboard.writeText(template.prompt);
     setCopied(true);
+    onTrackCopy?.();
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -67,6 +70,22 @@ const TemplateDetailDialog: React.FC<TemplateDetailDialogProps> = ({ template, i
                 <span className="h-6 inline-flex items-center gap-1 px-2.5 rounded-full bg-surface-container-highest text-on-surface-variant text-[11px] font-medium">
                   <span className="material-symbols-outlined" style={{ fontSize: 14 }}>photo_library</span>
                   {template.inputsNeeded} input{template.inputsNeeded > 1 ? 's' : ''} needed
+                </span>
+              )}
+              {stats && (stats.copies > 0 || stats.tries > 0) && (
+                <span className="h-6 inline-flex items-center gap-2.5 px-2.5 rounded-full bg-surface-container-highest text-on-surface-variant text-xs">
+                  {stats.copies > 0 && (
+                    <span className="inline-flex items-center gap-1">
+                      <span className="material-symbols-outlined" style={{ fontSize: 14 }}>content_copy</span>
+                      {stats.copies}
+                    </span>
+                  )}
+                  {stats.tries > 0 && (
+                    <span className="inline-flex items-center gap-1">
+                      <span className="material-symbols-outlined" style={{ fontSize: 14 }}>play_arrow</span>
+                      {stats.tries}
+                    </span>
+                  )}
                 </span>
               )}
             </div>

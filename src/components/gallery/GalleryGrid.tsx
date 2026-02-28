@@ -1,14 +1,15 @@
 import React from 'react';
-import { Template } from '../../types';
+import { Template, TemplateStats } from '../../types';
 import GalleryCard from './GalleryCard';
 
 interface GalleryGridProps {
   templates: Template[];
   onSelectTemplate: (template: Template) => void;
   isLoading?: boolean;
+  templateStats?: Record<string, TemplateStats>;
 }
 
-const GalleryGrid: React.FC<GalleryGridProps> = ({ templates, onSelectTemplate, isLoading }) => {
+const GalleryGrid: React.FC<GalleryGridProps> = ({ templates, onSelectTemplate, isLoading, templateStats }) => {
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
@@ -66,6 +67,7 @@ const GalleryGrid: React.FC<GalleryGridProps> = ({ templates, onSelectTemplate, 
             template={template}
             onSelect={onSelectTemplate}
             index={i}
+            stats={templateStats?.[String(template.id)]}
           />
         ))}
       </div>

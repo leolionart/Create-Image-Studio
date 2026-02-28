@@ -1,4 +1,4 @@
-import { Template, TemplateListResponse } from '../types';
+import { Template, TemplateListResponse, TemplateStats } from '../types';
 
 export async function fetchTemplates(): Promise<TemplateListResponse> {
   const response = await fetch('/api/templates');
@@ -6,6 +6,14 @@ export async function fetchTemplates(): Promise<TemplateListResponse> {
     throw new Error('Failed to fetch templates');
   }
   return response.json();
+}
+
+export function trackTemplateUsage(id: number, action: 'copy' | 'try'): void {
+  fetch(`/api/templates/${id}/track`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action }),
+  }).catch(() => {});
 }
 
 export interface SubmitTemplatePayload {

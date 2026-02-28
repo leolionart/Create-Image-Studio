@@ -15,7 +15,15 @@ export interface Template {
 // Backward compatibility alias
 export type Case = Template;
 
+export interface TemplateStats {
+  copies: number;
+  tries: number;
+}
+
+export type SortOption = 'newest' | 'popular' | 'most-copied' | 'most-tried';
+
 export interface TemplateListResponse {
   templates: Template[];
   categories: string[];
+  stats: Record<string, TemplateStats>;
 }

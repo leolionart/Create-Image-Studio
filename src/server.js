@@ -19,6 +19,7 @@ app.use(express.json({ limit: '50mb' }));
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const BUILTIN_PATH = path.join(DATA_DIR, 'built-in-templates.json');
 const CUSTOM_PATH = path.join(DATA_DIR, 'custom-templates.json');
+const STATS_PATH = path.join(DATA_DIR, 'template-stats.json');
 
 const COMMUNITY_DIR = path.join(__dirname, '..', 'public', 'community');
 
@@ -28,6 +29,9 @@ if (!fs.existsSync(DATA_DIR)) {
 }
 if (!fs.existsSync(CUSTOM_PATH)) {
     fs.writeFileSync(CUSTOM_PATH, '[]');
+}
+if (!fs.existsSync(STATS_PATH)) {
+    fs.writeFileSync(STATS_PATH, '{}');
 }
 if (!fs.existsSync(COMMUNITY_DIR)) {
     fs.mkdirSync(COMMUNITY_DIR, { recursive: true });
@@ -74,6 +78,18 @@ function writeCustomTemplates(templates) {
     fs.writeFileSync(CUSTOM_PATH, JSON.stringify(templates, null, 2));
 }
 
+function readStats() {
+    try {
+        return JSON.parse(fs.readFileSync(STATS_PATH, 'utf-8'));
+    } catch {
+        return {};
+    }
+}
+
+function writeStats(stats) {
+    fs.writeFileSync(STATS_PATH, JSON.stringify(stats));
+}
+
 // --- Template API Endpoints ---
 
 // GET /api/templates - Return all templates (built-in + custom)
@@ -82,7 +98,8 @@ app.get('/api/templates', (req, res) => {
     const custom = readCustomTemplates();
     const templates = [...builtIn, ...custom];
     const categories = [...new Set(templates.map(t => t.category))].sort();
-    res.json({ templates, categories });
+    const stats = readStats();
+    res.json({ templates, categories, stats });
 });
 
 // POST /api/templates - Add new template (for n8n integration)
@@ -139,6 +156,21 @@ app.delete('/api/templates/:id', (req, res) => {
 
     custom.splice(index, 1);
     writeCustomTemplates(custom);
+    res.json({ success: true });
+});
+
+// POST /api/templates/:id/track - Track template usage (copy/try)
+app.post('/api/templates/:id/track', (req, res) => {
+    const id = req.params.id;
+    const { action } = req.body;
+    if (action !== 'copy' && action !== 'try') {
+        return res.status(400).json({ error: 'Invalid action. Use "copy" or "try".' });
+    }
+    const stats = readStats();
+    if (!stats[id]) stats[id] = { copies: 0, tries: 0 };
+    if (action === 'copy') stats[id].copies++;
+    else stats[id].tries++;
+    writeStats(stats);
     res.json({ success: true });
 });
 

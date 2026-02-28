@@ -9,5 +9,7 @@ services:
       - GOOGLE_GEMINI_BASE_URL=${GOOGLE_GEMINI_BASE_URL}
     env_file:
       - .env
+    volumes:
+      - ./data:/app/data
     container_name: creative-image-studio
     restart: unless-stopped
