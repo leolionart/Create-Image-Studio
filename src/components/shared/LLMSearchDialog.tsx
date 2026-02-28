@@ -15,6 +15,7 @@ const LLMSearchDialog: React.FC<LLMSearchDialogProps> = ({ isOpen, onClose, temp
     const [isSearching, setIsSearching] = useState(false);
     const [results, setResults] = useState<Template[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [searchPhase, setSearchPhase] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -25,6 +26,15 @@ const LLMSearchDialog: React.FC<LLMSearchDialogProps> = ({ isOpen, onClose, temp
             setError(null);
         }
     }, [isOpen]);
+
+    // Cycle through search phases while searching
+    useEffect(() => {
+        if (!isSearching) { setSearchPhase(0); return; }
+        const interval = setInterval(() => {
+            setSearchPhase(p => (p + 1) % 4);
+        }, 1800);
+        return () => clearInterval(interval);
+    }, [isSearching]);
 
     // Close on Escape
     useEffect(() => {
@@ -124,7 +134,42 @@ const LLMSearchDialog: React.FC<LLMSearchDialogProps> = ({ isOpen, onClose, temp
 
                 {/* Results area */}
                 <div className="max-h-[60vh] overflow-y-auto p-6 bg-surface-container/50">
-                    {error && (
+                    {isSearching && (
+                        <div className="flex flex-col items-center py-12 gap-5 animate-fade-in">
+                            {/* Animated icon */}
+                            <span
+                                className="material-symbols-outlined text-primary"
+                                style={{ fontSize: 36, animation: 'spin 2.5s linear infinite' }}
+                            >
+                                auto_awesome
+                            </span>
+                            {/* Phase text with fade transition */}
+                            <div className="text-center space-y-1.5">
+                                <p key={searchPhase} className="text-sm font-medium text-on-surface animate-fade-in">
+                                    {[
+                                        'Đang phân tích yêu cầu của bạn...',
+                                        'Đang tìm kiếm prompt phù hợp...',
+                                        'Đang so sánh với thư viện template...',
+                                        'Đang sắp xếp kết quả tốt nhất...',
+                                    ][searchPhase]}
+                                </p>
+                                <p className="text-xs text-outline">Powered by Gemini AI</p>
+                            </div>
+                            {/* Progress steps */}
+                            <div className="flex gap-1.5 mt-1">
+                                {[0, 1, 2, 3].map(i => (
+                                    <div
+                                        key={i}
+                                        className={`h-1 rounded-full transition-all duration-500 ${
+                                            i <= searchPhase ? 'w-6 bg-primary' : 'w-3 bg-outline-variant/40'
+                                        }`}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {error && !isSearching && (
                         <div className="p-4 bg-error-container/30 text-error rounded-xl text-center text-sm">
                             {error}
                         </div>
