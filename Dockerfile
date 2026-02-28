@@ -17,14 +17,14 @@ RUN npm install --omit=dev
 # Copy the built frontend from the builder stage
 COPY --from=builder /app/dist ./dist
 
-# Copy the server file
-COPY src/server.js .
+# Copy the server file (keep in src/ so relative paths match dev)
+COPY src/server.js ./src/
 
-# Copy project documentation needed inside the container
-COPY README.md ./docs/
+# Copy template data
+COPY data/ ./data/
 
 # Expose the port the server will run on
 EXPOSE 3001
 
 # Command to start the server
-CMD ["node", "server.js"]
+CMD ["node", "src/server.js"]

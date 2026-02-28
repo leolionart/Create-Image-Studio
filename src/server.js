@@ -282,10 +282,14 @@ app.post('/api/gemini', async (req, res) => {
 
 // Serve static files from React app in production
 if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, 'dist')));
+    const distDir = path.join(__dirname, '..', 'dist');
+    app.use(express.static(distDir));
+
+    // Serve community uploaded images
+    app.use('/community', express.static(path.join(COMMUNITY_DIR)));
 
     app.get(/.*/, (req, res) => {
-        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+        res.sendFile(path.join(distDir, 'index.html'));
     });
 }
 
