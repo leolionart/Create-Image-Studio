@@ -7,6 +7,20 @@ interface GalleryCardProps {
   index: number;
 }
 
+/** Two stacked <img>: cover (default) crossfades to contain (hover) */
+const RevealImage = ({ src, alt }: { src: string; alt: string }) => (
+  <div className="absolute inset-0">
+    <img
+      src={src} alt={alt} loading="lazy"
+      className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-md-standard group-hover:opacity-0"
+    />
+    <img
+      src={src} alt={alt} loading="lazy"
+      className="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ease-md-standard opacity-0 group-hover:opacity-100"
+    />
+  </div>
+);
+
 const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index }) => {
   const hasInputImages = template.inputImages.length > 0;
   const hasOutputImage = !!template.outputImage;
@@ -24,15 +38,10 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index }) 
       {/* === Image Section === */}
       <div className="relative aspect-[4/3] overflow-hidden bg-surface-container-highest">
         {isTextOnly || !hasInputImages ? (
-          /* --- Text-to-Image: output only with gradient overlay --- */
+          /* --- Text-to-Image: output only --- */
           <>
             {hasOutputImage ? (
-              <img
-                src={template.outputImage}
-                alt={template.title}
-                className="w-full h-full object-cover transition-transform duration-500 ease-md-standard group-hover:scale-[1.06]"
-                loading="lazy"
-              />
+              <RevealImage src={template.outputImage} alt={template.title} />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-primary-container/20">
                 <span className="material-symbols-outlined text-primary/40" style={{ fontSize: 64 }}>palette</span>
@@ -61,12 +70,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index }) 
               {/* Input side */}
               <div className="flex-1 relative overflow-hidden">
                 {template.inputImages.length === 1 ? (
-                  <img
-                    src={template.inputImages[0]}
-                    alt="Before"
-                    className="w-full h-full object-cover transition-transform duration-500 ease-md-standard group-hover:scale-[1.06]"
-                    loading="lazy"
-                  />
+                  <RevealImage src={template.inputImages[0]} alt="Before" />
                 ) : (
                   <div className="w-full h-full flex">
                     {template.inputImages.slice(0, 2).map((src, i) => (
@@ -91,7 +95,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index }) 
                 )}
               </div>
 
-              {/* Arrow divider — pill shaped */}
+              {/* Arrow divider */}
               <div className="w-9 flex items-center justify-center bg-surface-container shrink-0 relative z-10">
                 <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
                   <span className="material-symbols-outlined text-primary" style={{ fontSize: 16 }}>arrow_forward</span>
@@ -101,12 +105,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index }) 
               {/* Output side */}
               <div className="flex-1 relative overflow-hidden">
                 {hasOutputImage ? (
-                  <img
-                    src={template.outputImage}
-                    alt="After"
-                    className="w-full h-full object-cover transition-transform duration-500 ease-md-standard group-hover:scale-[1.06]"
-                    loading="lazy"
-                  />
+                  <RevealImage src={template.outputImage} alt="After" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <span className="material-symbols-outlined text-on-surface-variant" style={{ fontSize: 32 }}>image</span>
@@ -119,7 +118,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index }) 
               </div>
             </div>
 
-            {/* Bottom scrim for text readability in before/after mode */}
+            {/* Bottom scrim */}
             <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-scrim/40 to-transparent pointer-events-none" />
           </>
         )}
@@ -127,14 +126,12 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index }) 
 
       {/* === Content Section === */}
       <div className="p-4 space-y-2">
-        {/* Title row (only for before/after cards — text-only shows title on image) */}
         {!isTextOnly && hasInputImages && (
           <h3 className="text-sm font-medium text-on-surface leading-snug line-clamp-1">
             {template.title}
           </h3>
         )}
 
-        {/* Meta row */}
         <div className="flex items-center gap-2">
           <span className="h-6 inline-flex items-center px-2.5 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-medium tracking-wide">
             {template.category}
@@ -148,7 +145,6 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index }) 
           )}
         </div>
 
-        {/* Prompt snippet */}
         <p className="text-xs text-on-surface-variant/70 leading-relaxed line-clamp-2">
           {template.prompt}
         </p>
