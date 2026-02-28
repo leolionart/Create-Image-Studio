@@ -24,3 +24,9 @@ dist-ssr
 *.sw?
 .env
 .gemini/settings.json
+
+# Debug screenshots
+screenshot-*.png
+
+# Playwright MCP
+.playwright-mcp/
