@@ -227,10 +227,10 @@
     "author": "@Gorden Sun",
     "category": "Fun & Creative",
     "inputImages": [
-      "/input-images/case19-input1.png"
+      "/input-images/case85-input1.png"
     ],
     "outputImage": "/card-previews/math-problem-reasoning.png",
-    "prompt": "Write the answer to the problem in the corresponding position based on the question.",
+    "prompt": "Solve the math problems shown in the input image. Neatly write the step-by-step solution and final answers in the corresponding answer boxes using the same handwriting style. Maintain the original lighting, paper texture, and background.",
     "inputsNeeded": 1
   },
   {
@@ -1202,10 +1202,10 @@
     "author": "@icreatelife",
     "category": "Fun & Creative",
     "inputImages": [
-      "/input-images/case100-input1.png"
+      "/input-images/case93-input1.png"
     ],
     "outputImage": "/card-previews/make-object-transparent.png",
-    "prompt": "Make this object transparent.",
+    "prompt": "Make the apple in the input image completely transparent, as if it were carved from high-quality clear glass or crystal. Ensure the core and seeds are faintly visible inside. Match the original lighting, perspective, and wooden table background with realistic glass refractions.",
     "inputsNeeded": 1
   },
   {
