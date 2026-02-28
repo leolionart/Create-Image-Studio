@@ -1,117 +1,212 @@
 
-import React, { useState, useMemo } from 'react';
-import { Case } from './types';
-import { CASES } from './constants';
-import CaseGallery from './components/CaseGallery';
-import CaseViewModal from './components/CaseViewModal';
-import { SearchIcon } from './components/icons';
-
-const inspirationImages = [
-  '/banner/banner-1.svg',
-  '/banner/banner-2.svg',
-  '/banner/banner-3.svg',
-  '/banner/banner-4.svg',
-  '/banner/banner-5.svg',
-  '/banner/banner-6.svg'
-];
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Template } from './types';
+import { fetchTemplates } from './services/templateService';
+import { editImage, generateImageFromText, loadApiSettings } from './services/geminiService';
+import GalleryShell from './components/layout/GalleryShell';
+import FilterBar from './components/gallery/FilterBar';
+import GalleryGrid from './components/gallery/GalleryGrid';
+import TemplateDetailDialog from './components/gallery/TemplateDetailDialog';
+import TryItDialog from './components/gallery/TryItDialog';
+import SettingsModal from './components/shared/SettingsModal';
 
 const App: React.FC = () => {
-  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  // Template data
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+
+  // Gallery filter state
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const categories = useMemo(() => ['All', ...Array.from(new Set(CASES.map(c => c.category)))], []);
-  const [activeCategory, setActiveCategory] = useState(categories[0]);
+  const [activeCategory, setActiveCategory] = useState('All');
 
-  const filteredCases = useMemo(() => {
-    let cases = CASES;
+  // Dialog state
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [tryItOpen, setTryItOpen] = useState(false);
+
+  // Editor state (for Try It)
+  const [prompt, setPrompt] = useState('');
+  const [uploadedImages, setUploadedImages] = useState<({ base64: string; mimeType: string } | null)[]>([]);
+
+  // Result state
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [result, setResult] = useState<{ text: string | null; imageBase64: string | null } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // UI state
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [hasCustomApi, setHasCustomApi] = useState(false);
+
+  // Check if custom API is configured
+  useEffect(() => {
+    const settings = loadApiSettings();
+    setHasCustomApi(!!settings.apiKey || !!settings.baseUrl);
+  }, [settingsOpen]);
+
+  // Fetch templates on mount
+  useEffect(() => {
+    fetchTemplates()
+      .then(data => {
+        setTemplates(data.templates);
+        setCategories(data.categories);
+      })
+      .catch(err => console.error('Failed to load templates:', err))
+      .finally(() => setIsLoadingTemplates(false));
+  }, []);
+
+  // Template counts per category
+  const templateCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    templates.forEach(t => {
+      counts[t.category] = (counts[t.category] || 0) + 1;
+    });
+    return counts;
+  }, [templates]);
+
+  // Filtered templates
+  const filtered = useMemo(() => {
+    let result = templates;
     if (activeCategory !== 'All') {
-      cases = cases.filter(c => c.category === activeCategory);
+      result = result.filter(t => t.category === activeCategory);
     }
-    if (searchQuery.trim() !== '') {
-        const lowercasedQuery = searchQuery.toLowerCase();
-        cases = cases.filter(c => 
-            c.title.toLowerCase().includes(lowercasedQuery) ||
-            c.author.toLowerCase().includes(lowercasedQuery) ||
-            c.category.toLowerCase().includes(lowercasedQuery)
-        );
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(t =>
+        t.title.toLowerCase().includes(q) ||
+        t.author.toLowerCase().includes(q) ||
+        t.category.toLowerCase().includes(q) ||
+        t.prompt.toLowerCase().includes(q)
+      );
     }
-    return cases;
-  }, [activeCategory, searchQuery]);
+    return result;
+  }, [templates, activeCategory, searchQuery]);
 
-  const handleSelectCase = (caseData: Case) => {
-    setSelectedCase(caseData);
-  };
+  // Gallery handlers
+  const handleOpenDetail = useCallback((template: Template) => {
+    setSelectedTemplate(template);
+    setDetailOpen(true);
+  }, []);
 
-  const handleCloseModal = () => {
-    setSelectedCase(null);
-  };
+  const handleCloseDetail = useCallback(() => {
+    setDetailOpen(false);
+  }, []);
+
+  const handleTryIt = useCallback(() => {
+    if (!selectedTemplate) return;
+    setPrompt(selectedTemplate.prompt);
+    setUploadedImages(new Array(selectedTemplate.inputsNeeded).fill(null));
+    setResult(null);
+    setError(null);
+    setDetailOpen(false);
+    setTryItOpen(true);
+  }, [selectedTemplate]);
+
+  const handleCloseTryIt = useCallback(() => {
+    setTryItOpen(false);
+  }, []);
+
+  // Image handlers
+  const handleImageUpload = useCallback((index: number, base64: string, mimeType: string) => {
+    setUploadedImages(prev => {
+      const next = [...prev];
+      next[index] = { base64, mimeType };
+      return next;
+    });
+  }, []);
+
+  const handleImageRemove = useCallback((index: number) => {
+    setUploadedImages(prev => {
+      const next = [...prev];
+      next[index] = null;
+      return next;
+    });
+  }, []);
+
+  // Can generate check
+  const canGenerate = useMemo(() => {
+    if (isGenerating) return false;
+    if (!prompt.trim()) return false;
+    if (selectedTemplate && selectedTemplate.inputsNeeded > 0) {
+      return uploadedImages.every(img => img !== null);
+    }
+    return true;
+  }, [isGenerating, prompt, selectedTemplate, uploadedImages]);
+
+  // Generate handler
+  const handleGenerate = useCallback(async () => {
+    if (!canGenerate) return;
+
+    setIsGenerating(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      let response;
+      if (selectedTemplate && selectedTemplate.inputsNeeded > 0) {
+        const validImages = uploadedImages.filter(img => img !== null) as { base64: string; mimeType: string }[];
+        response = await editImage(prompt, validImages);
+      } else if (uploadedImages.some(img => img !== null)) {
+        const validImages = uploadedImages.filter(img => img !== null) as { base64: string; mimeType: string }[];
+        response = await editImage(prompt, validImages);
+      } else {
+        response = await generateImageFromText(prompt);
+      }
+      setResult(response);
+    } catch (e: any) {
+      setError(e.message || 'An unexpected error occurred.');
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [canGenerate, selectedTemplate, uploadedImages, prompt]);
 
   return (
-    <div className="min-h-screen bg-[#fcfaf8]">
-      <header className="relative shadow-md overflow-hidden">
-        <div className="grid grid-cols-3 sm:grid-cols-6 h-64">
-            {inspirationImages.map((src, i) => (
-                <img key={i} src={src} alt={`Inspiration image ${i+1}`} className="w-full h-full object-cover"/>
-            ))}
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/50 to-transparent"></div>
-        <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center p-4">
-                 <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight text-shadow">
-                    Creative Image Studio 🍌
-                </h1>
-                <p className="text-white/80 mt-2 max-w-2xl mx-auto text-shadow-sm">
-                    Explore 110+ use cases powered by Gemini. Select a category, pick a case, and bring your ideas to life.
-                </p>
-            </div>
-        </div>
-      </header>
+    <>
+      <GalleryShell
+        onOpenSettings={() => setSettingsOpen(true)}
+        hasCustomApi={hasCustomApi}
+      >
+        <FilterBar
+          categories={categories}
+          activeCategory={activeCategory}
+          onCategoryChange={setActiveCategory}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          templateCounts={templateCounts}
+          totalCount={templates.length}
+        />
+        <GalleryGrid
+          templates={filtered}
+          onSelectTemplate={handleOpenDetail}
+          isLoading={isLoadingTemplates}
+        />
+      </GalleryShell>
 
-      <main className="container mx-auto py-8">
-        <div className="px-6 mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Explore Cases</h2>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                <div className="flex flex-wrap gap-2">
-                    {categories.map(category => (
-                        <button 
-                            key={category}
-                            onClick={() => setActiveCategory(category)}
-                            className={`px-4 py-2 text-sm font-semibold rounded-full transition-all duration-200 ${
-                                activeCategory === category 
-                                ? 'bg-[#f4c28e] text-white shadow' 
-                                : 'bg-white text-gray-700 hover:bg-[#f4d1dc]/50'
-                            }`}
-                        >
-                            {category}
-                        </button>
-                    ))}
-                </div>
-                <div className="relative w-full sm:w-auto sm:max-w-sm">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <SearchIcon className="w-5 h-5 text-gray-400" />
-                    </div>
-                    <input
-                        type="text"
-                        placeholder="Search cases..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-[#f4c28e] focus:border-[#f4c28e] transition-colors"
-                        aria-label="Search cases"
-                    />
-                </div>
-            </div>
-        </div>
-        <CaseGallery cases={filteredCases} onSelectCase={handleSelectCase} />
-      </main>
+      <TemplateDetailDialog
+        template={selectedTemplate}
+        isOpen={detailOpen}
+        onClose={handleCloseDetail}
+        onTryIt={handleTryIt}
+      />
 
-      {selectedCase && (
-        <CaseViewModal caseData={selectedCase} onClose={handleCloseModal} />
-      )}
-      
-      <footer className="text-center py-6 text-gray-500 text-sm">
-        <p>Built with React, Tailwind CSS, and the Gemini API.</p>
-      </footer>
-    </div>
+      <TryItDialog
+        template={selectedTemplate}
+        isOpen={tryItOpen}
+        onClose={handleCloseTryIt}
+        prompt={prompt}
+        onPromptChange={setPrompt}
+        uploadedImages={uploadedImages}
+        onImageUpload={handleImageUpload}
+        onImageRemove={handleImageRemove}
+        onGenerate={handleGenerate}
+        canGenerate={canGenerate}
+        isGenerating={isGenerating}
+        result={result}
+        error={error}
+      />
+
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+    </>
   );
 };
 

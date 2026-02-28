@@ -1,6 +1,5 @@
 
 import React, { useState, useRef } from 'react';
-import { UploadIcon, CloseIcon } from './icons';
 
 interface ImageUploaderProps {
   onImageUpload: (base64: string, mimeType: string) => void;
@@ -10,36 +9,58 @@ interface ImageUploaderProps {
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, onImageRemove, index }) => {
   const [preview, setPreview] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const processFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      setPreview(result);
+      const base64Data = result.split(',')[1];
+      onImageUpload(base64Data, file.type);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setPreview(result);
-        const base64Data = result.split(',')[1];
-        onImageUpload(base64Data, file.type);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (file) processFile(file);
   };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => setIsDragOver(false);
 
   const handleRemove = () => {
     setPreview(null);
     onImageRemove();
-    if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-    }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
-    <div className="relative w-full aspect-square border-2 border-dashed border-[#f4d1dc] rounded-xl flex items-center justify-center bg-[#fcfaf8]/50 transition-all duration-300 hover:border-[#f4c28e] hover:bg-white">
+    <div
+      className={`relative w-full aspect-square rounded-md border-2 border-dashed flex items-center justify-center transition-all duration-200 ease-md-standard ${
+        isDragOver
+          ? 'border-primary bg-primary/[0.08]'
+          : preview
+            ? 'border-transparent'
+            : 'border-outline-variant bg-surface-container-high hover:border-primary/40 hover:bg-on-surface/[0.04]'
+      }`}
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+    >
       <input
         type="file"
         ref={fileInputRef}
@@ -48,18 +69,21 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, onImageRem
         accept="image/png, image/jpeg, image/webp"
       />
       {!preview ? (
-        <button onClick={triggerFileInput} className="text-center text-[#d1c4e9] hover:text-[#f4c28e]">
-          <UploadIcon className="w-10 h-10 mx-auto" />
-          <span className="mt-2 block text-sm font-semibold">Upload Input #{index + 1}</span>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="text-center text-on-surface-variant hover:text-on-surface transition-colors duration-200 ease-md-standard"
+        >
+          <span className="material-symbols-outlined block mx-auto mb-1" style={{ fontSize: 32 }}>upload</span>
+          <span className="block text-xs font-medium">Upload #{index + 1}</span>
         </button>
       ) : (
         <>
-          <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover rounded-xl" />
+          <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover rounded-md" />
           <button
             onClick={handleRemove}
-            className="absolute top-2 right-2 bg-white/70 rounded-full p-1.5 text-gray-700 hover:bg-white hover:scale-110 transition-transform duration-200"
+            className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-scrim/60 backdrop-blur-sm rounded-full text-white hover:bg-scrim/80 transition-colors duration-200 ease-md-standard"
           >
-            <CloseIcon className="w-5 h-5" />
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
           </button>
         </>
       )}

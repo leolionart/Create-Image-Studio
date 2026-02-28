@@ -1,26 +1,128 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#121316" />
     <title>Creative Image Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Roboto', 'system-ui', '-apple-system', 'sans-serif'],
+              mono: ['Roboto Mono', 'monospace'],
+            },
+            colors: {
+              /* M3 Dark Theme — seed: #4285F4 (Google Blue) */
+              primary:              { DEFAULT: '#A8C7FA', container: '#0842A0' },
+              'on-primary':         { DEFAULT: '#062E6F', container: '#D3E3FD' },
+              secondary:            { DEFAULT: '#BEC6DC', container: '#3E4759' },
+              'on-secondary':       { DEFAULT: '#283141', container: '#DAE2F9' },
+              tertiary:             { DEFAULT: '#D4BEE6', container: '#503D6A' },
+              'on-tertiary':        { DEFAULT: '#392653', container: '#EDDDF9' },
+              error:                { DEFAULT: '#FFB4AB', container: '#93000A' },
+              'on-error':           { DEFAULT: '#690005', container: '#FFDAD6' },
+              surface: {
+                DEFAULT:            '#121316',
+                dim:                '#121316',
+                bright:             '#38393D',
+                variant:            '#44474F',
+                'container-lowest': '#0D0E11',
+                'container-low':    '#1B1B1F',
+                container:          '#1F1F23',
+                'container-high':   '#292A2E',
+                'container-highest':'#343539',
+              },
+              'on-surface': {
+                DEFAULT: '#E3E2E6',
+                variant:  '#C4C6D0',
+              },
+              outline: {
+                DEFAULT:  '#8E9099',
+                variant:  '#44474F',
+              },
+              inverse: {
+                surface:    '#E3E2E6',
+                'on-surface':'#2F3034',
+                primary:    '#0B57D0',
+              },
+              scrim: '#000000',
+            },
+            borderRadius: {
+              'none': '0px',
+              'xs':   '4px',      /* M3E extra-small */
+              'sm':   '8px',      /* M3E small */
+              'md':   '12px',     /* M3E medium */
+              'lg':   '16px',     /* M3E large */
+              'xl':   '20px',     /* M3E extra-large */
+              '2xl':  '24px',     /* M3E 2xl */
+              '3xl':  '28px',     /* M3E hero cards */
+              '4xl':  '32px',     /* M3E expressive */
+              'full': '9999px',   /* M3E pill */
+            },
+            boxShadow: {
+              'elevation-1': '0px 1px 2px 0px rgba(0,0,0,0.30), 0px 1px 3px 1px rgba(0,0,0,0.15)',
+              'elevation-2': '0px 1px 2px 0px rgba(0,0,0,0.30), 0px 2px 6px 2px rgba(0,0,0,0.15)',
+              'elevation-3': '0px 1px 3px 0px rgba(0,0,0,0.30), 0px 4px 8px 3px rgba(0,0,0,0.15)',
+            },
+            animation: {
+              'fade-in':    'fadeIn 200ms cubic-bezier(0.2, 0, 0, 1)',
+              'slide-up':   'slideUp 300ms cubic-bezier(0.2, 0, 0, 1)',
+              'slide-down': 'slideDown 250ms cubic-bezier(0.2, 0, 0, 1)',
+              'scale-in':   'scaleIn 250ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+              'card-in':    'cardIn 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
+            },
+            keyframes: {
+              fadeIn:    { from: { opacity: '0' }, to: { opacity: '1' } },
+              slideUp:   { from: { transform: 'translateY(100%)' }, to: { transform: 'translateY(0)' } },
+              slideDown: { from: { transform: 'translateY(-12px)', opacity: '0' }, to: { transform: 'translateY(0)', opacity: '1' } },
+              scaleIn:   { from: { transform: 'scale(0.92)', opacity: '0' }, to: { transform: 'scale(1)', opacity: '1' } },
+              cardIn:    { from: { transform: 'translateY(20px) scale(0.96)', opacity: '0' }, to: { transform: 'translateY(0) scale(1)', opacity: '1' } },
+            },
+            transitionTimingFunction: {
+              'md-standard':   'cubic-bezier(0.2, 0, 0, 1)',
+              'md-emphasized': 'cubic-bezier(0.2, 0, 0, 1)',
+              'md-decelerate': 'cubic-bezier(0, 0, 0, 1)',
+              'md-accelerate': 'cubic-bezier(0.3, 0, 0.8, 0.15)',
+              'spring':        'cubic-bezier(0.34, 1.56, 0.64, 1)',
+            },
+          },
+        },
+      }
+    </script>
     <style>
-      /* For custom scrollbar styling */
-      ::-webkit-scrollbar {
-        width: 8px;
+      /* M3 scrollbar styling */
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #44474F; border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
+      ::-webkit-scrollbar-thumb:hover { background: #8E9099; border: 2px solid transparent; background-clip: content-box; }
+      * { scrollbar-width: thin; scrollbar-color: #44474F transparent; }
+      body { overflow: hidden; }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+      /* M3E shimmer skeleton */
+      @keyframes shimmer {
+        0% { background-position: -200% center; }
+        100% { background-position: 200% center; }
       }
-      ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #f4d1dc;
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #f4c28e;
+
+      /* M3 state layer opacity tokens */
+      .state-hover { --state-opacity: 0.08; }
+      .state-focus { --state-opacity: 0.12; }
+      .state-pressed { --state-opacity: 0.12; }
+      .state-dragged { --state-opacity: 0.16; }
+
+      /* Material Symbols config */
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
       }
     </style>
 <script type="importmap">
@@ -34,7 +136,7 @@
 }
 </script>
 </head>
-<body class="bg-[#fcfaf8]">
+<body class="bg-surface text-on-surface font-sans">
     <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>
 </body>

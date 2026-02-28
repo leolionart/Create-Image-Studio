@@ -1,5 +1,5 @@
 
-export interface Case {
+export interface Template {
   id: number;
   title: string;
   author: string;
@@ -9,4 +9,13 @@ export interface Case {
   prompt: string;
   inputsNeeded: number;
   note?: string;
+  source?: 'built-in' | 'custom';
+}
+
+// Backward compatibility alias
+export type Case = Template;
+
+export interface TemplateListResponse {
+  templates: Template[];
+  categories: string[];
 }

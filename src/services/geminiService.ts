@@ -29,13 +29,37 @@ interface GenerateImageRequest {
 
 type GeminiRequest = EditImageRequest | GenerateImageRequest;
 
+export interface ApiSettings {
+    apiKey: string;
+    baseUrl: string;
+}
+
+const SETTINGS_KEY = 'cis-api-settings';
+
+export const loadApiSettings = (): ApiSettings => {
+    try {
+        const stored = localStorage.getItem(SETTINGS_KEY);
+        if (stored) return JSON.parse(stored);
+    } catch {}
+    return { apiKey: '', baseUrl: '' };
+};
+
+export const saveApiSettings = (settings: ApiSettings): void => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+};
+
 const callGemini = async (payload: GeminiRequest): Promise<GeminiResponse> => {
+    const settings = loadApiSettings();
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+    };
+    if (settings.apiKey) headers['x-api-key'] = settings.apiKey;
+    if (settings.baseUrl) headers['x-base-url'] = settings.baseUrl;
+
     try {
         const response = await fetch('/api/gemini', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers,
             body: JSON.stringify(payload),
         });
 

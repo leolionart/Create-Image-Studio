@@ -1,10 +1,10 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 
-// Tải các biến môi trường từ file .env
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,16 +13,106 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware để parse JSON body
 app.use(express.json({ limit: '10mb' }));
 
-// API Proxy Endpoint for Gemini
+// --- Template Data Layer ---
+const DATA_DIR = path.join(__dirname, '..', 'data');
+const BUILTIN_PATH = path.join(DATA_DIR, 'built-in-templates.json');
+const CUSTOM_PATH = path.join(DATA_DIR, 'custom-templates.json');
+
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+if (!fs.existsSync(CUSTOM_PATH)) {
+    fs.writeFileSync(CUSTOM_PATH, '[]');
+}
+
+function readBuiltInTemplates() {
+    try {
+        return JSON.parse(fs.readFileSync(BUILTIN_PATH, 'utf-8')).map(t => ({ ...t, source: 'built-in' }));
+    } catch {
+        console.error('Failed to read built-in templates');
+        return [];
+    }
+}
+
+function readCustomTemplates() {
+    try {
+        return JSON.parse(fs.readFileSync(CUSTOM_PATH, 'utf-8')).map(t => ({ ...t, source: 'custom' }));
+    } catch {
+        return [];
+    }
+}
+
+function writeCustomTemplates(templates) {
+    fs.writeFileSync(CUSTOM_PATH, JSON.stringify(templates, null, 2));
+}
+
+// --- Template API Endpoints ---
+
+// GET /api/templates - Return all templates (built-in + custom)
+app.get('/api/templates', (req, res) => {
+    const builtIn = readBuiltInTemplates();
+    const custom = readCustomTemplates();
+    const templates = [...builtIn, ...custom];
+    const categories = [...new Set(templates.map(t => t.category))].sort();
+    res.json({ templates, categories });
+});
+
+// POST /api/templates - Add new template (for n8n integration)
+app.post('/api/templates', (req, res) => {
+    const { title, author, category, prompt, inputsNeeded, inputImages, outputImage, note } = req.body;
+
+    if (!title || !prompt || inputsNeeded === undefined) {
+        return res.status(400).json({ error: 'Missing required fields: title, prompt, inputsNeeded' });
+    }
+
+    const custom = readCustomTemplates();
+    const allBuiltIn = readBuiltInTemplates();
+    const maxId = Math.max(999, ...allBuiltIn.map(t => t.id), ...custom.map(t => t.id));
+
+    const newTemplate = {
+        id: maxId + 1,
+        title,
+        author: author || 'n8n',
+        category: category || 'Custom',
+        inputImages: inputImages || [],
+        outputImage: outputImage || '',
+        prompt,
+        inputsNeeded: Number(inputsNeeded),
+        note: note || undefined,
+        source: 'custom',
+    };
+
+    custom.push(newTemplate);
+    writeCustomTemplates(custom);
+    res.status(201).json({ success: true, template: newTemplate });
+});
+
+// DELETE /api/templates/:id - Delete a custom template
+app.delete('/api/templates/:id', (req, res) => {
+    const id = Number(req.params.id);
+    const custom = readCustomTemplates();
+    const index = custom.findIndex(t => t.id === id);
+
+    if (index === -1) {
+        return res.status(404).json({ error: 'Template not found or is a built-in template' });
+    }
+
+    custom.splice(index, 1);
+    writeCustomTemplates(custom);
+    res.json({ success: true });
+});
+
+// --- Gemini API Proxy ---
 app.post('/api/gemini', async (req, res) => {
-    const apiKey = process.env.GEMINI_API_KEY;
-    const baseUrl = process.env.GOOGLE_GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com';
+    // Client-provided settings take priority over server env vars
+    const apiKey = req.headers['x-api-key'] || process.env.GEMINI_API_KEY;
+    const baseUrl = req.headers['x-base-url'] || process.env.GOOGLE_GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com';
 
     if (!apiKey) {
-        return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+        return res.status(500).json({ error: 'API key chưa được cấu hình. Vui lòng mở Settings để nhập API key.' });
     }
 
     const { action, prompt, images } = req.body;
@@ -32,7 +122,6 @@ app.post('/api/gemini', async (req, res) => {
     try {
         if (action === 'edit') {
             upstreamUrl = `${baseUrl}/v1beta/models/gemini-2.5-flash-image:generateContent`;
-            console.log('DEBUG: Using upstream URL:', upstreamUrl);
             const parts = [
                 ...images.map((image) => ({
                     inlineData: { data: image.base64, mimeType: image.mimeType },
@@ -45,7 +134,6 @@ app.post('/api/gemini', async (req, res) => {
             };
         } else if (action === 'generate') {
             upstreamUrl = `${baseUrl}/v1beta/models/imagen-4.0-generate-001:generateImage`;
-            console.log('DEBUG: Using upstream URL:', upstreamUrl);
             upstreamBody = {
                 prompt: prompt,
                 config: { numberOfImages: 1, outputMimeType: 'image/jpeg' },
@@ -63,7 +151,6 @@ app.post('/api/gemini', async (req, res) => {
             body: JSON.stringify(upstreamBody),
         });
 
-        // Handle empty responses
         const responseText = await upstreamResponse.text();
         let data;
         try {
@@ -78,7 +165,6 @@ app.post('/api/gemini', async (req, res) => {
             return res.status(upstreamResponse.status).json({ error: data?.error?.message || 'Gemini API request failed.' });
         }
 
-        // Trích xuất và gửi lại kết quả cho client
         let responsePayload = {};
         if (action === 'edit') {
             const candidate = data?.candidates?.[0];
@@ -105,12 +191,10 @@ app.post('/api/gemini', async (req, res) => {
     }
 });
 
-
 // Serve static files from React app in production
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, 'dist')));
 
-    // Catch-all to return index.html for any other request
     app.get(/.*/, (req, res) => {
         res.sendFile(path.join(__dirname, 'dist', 'index.html'));
     });
