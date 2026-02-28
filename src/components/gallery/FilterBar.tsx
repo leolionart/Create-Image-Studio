@@ -4,21 +4,19 @@ interface FilterBarProps {
   categories: string[];
   activeCategory: string;
   onCategoryChange: (category: string) => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
   templateCounts: Record<string, number>;
   totalCount: number;
+  onOpenAISearch?: () => void;
 }
 
 const FilterBar: React.FC<FilterBarProps> = ({
   categories,
   activeCategory,
   onCategoryChange,
-  searchQuery,
-  onSearchChange,
   templateCounts,
   totalCount,
-}) => {
+  onOpenAISearch,
+}: FilterBarProps) => {
   const ChipButton = ({ label, count, isActive, onClick }: { key?: React.Key; label: string; count: number; isActive: boolean; onClick: () => void }) => (
     <button
       onClick={onClick}
@@ -41,25 +39,15 @@ const FilterBar: React.FC<FilterBarProps> = ({
   return (
     <div className="sticky top-0 z-20 bg-surface/90 backdrop-blur-lg border-b border-outline-variant/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 space-y-3">
-        {/* Search */}
-        <div className="relative max-w-md">
-          <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant" style={{ fontSize: 20 }}>search</span>
-          <input
-            type="text"
-            placeholder="Search prompts, categories, authors..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-11 pr-10 h-12 text-sm bg-surface-container-high rounded-full text-on-surface placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all duration-200 ease-md-standard"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => onSearchChange('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-on-surface/[0.08] text-on-surface-variant transition-colors"
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
-            </button>
-          )}
-        </div>
+        {/* AI Search trigger */}
+        <button
+          onClick={onOpenAISearch}
+          className="w-full max-w-md h-12 px-4 inline-flex items-center gap-3 rounded-full bg-surface-container-high text-outline hover:bg-surface-container-highest hover:text-on-surface-variant active:bg-surface-bright transition-colors duration-200 cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-primary" style={{ fontSize: 20 }}>auto_awesome</span>
+          <span className="flex-1 text-sm text-left">Search prompts with AI...</span>
+          <kbd className="hidden sm:inline-flex items-center h-5 px-1.5 rounded bg-surface-container text-outline text-[10px] font-mono border border-outline-variant/50">⌘K</kbd>
+        </button>
 
         {/* Category chips — M3E filter chip row */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1 pb-0.5">

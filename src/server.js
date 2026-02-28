@@ -204,13 +204,18 @@ app.post('/api/gemini', async (req, res) => {
         return res.status(500).json({ error: 'API key chưa được cấu hình. Vui lòng mở Settings để nhập API key.' });
     }
 
-    const { action, prompt, images } = req.body;
+    // Client-provided model names take priority over env vars, then defaults
+    const editModel = req.headers['x-edit-model'] || process.env.EDIT_MODEL || 'gemini-2.5-flash-image';
+    const generateModel = req.headers['x-generate-model'] || process.env.GENERATE_MODEL || 'imagen-4.0-generate-001';
+    const searchModel = req.headers['x-search-model'] || process.env.SEARCH_MODEL || 'gemini-2.5-flash';
+
+    const { action, prompt, images, templatesData } = req.body;
     let upstreamUrl = '';
     let upstreamBody = {};
 
     try {
         if (action === 'edit') {
-            upstreamUrl = `${baseUrl}/v1beta/models/gemini-2.5-flash-image:generateContent`;
+            upstreamUrl = `${baseUrl}/v1beta/models/${editModel}:generateContent`;
             const parts = [
                 ...images.map((image) => ({
                     inlineData: { data: image.base64, mimeType: image.mimeType },
@@ -222,10 +227,41 @@ app.post('/api/gemini', async (req, res) => {
                 generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
             };
         } else if (action === 'generate') {
-            upstreamUrl = `${baseUrl}/v1beta/models/imagen-4.0-generate-001:generateImage`;
+            // Imagen models use :generateImage endpoint, others use :generateContent with IMAGE modality
+            const isImagen = generateModel.toLowerCase().includes('imagen');
+            if (isImagen) {
+                upstreamUrl = `${baseUrl}/v1beta/models/${generateModel}:generateImage`;
+                upstreamBody = {
+                    prompt: prompt,
+                    config: { numberOfImages: 1, outputMimeType: 'image/jpeg' },
+                };
+            } else {
+                upstreamUrl = `${baseUrl}/v1beta/models/${generateModel}:generateContent`;
+                upstreamBody = {
+                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                    generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
+                };
+            }
+        } else if (action === 'search') {
+            upstreamUrl = `${baseUrl}/v1beta/models/${searchModel}:generateContent`;
+            const systemInstruction = `You are a search engine. Your ONLY job is to return matching template IDs as a JSON array.
+
+RULES:
+- Output ONLY a JSON array of numbers, e.g. [5, 12, 3]
+- NO explanations, NO markdown, NO text before or after the array
+- Order by relevance, max 20 IDs
+- If nothing matches, return []
+
+Example output: [7, 2, 15]`;
+
             upstreamBody = {
-                prompt: prompt,
-                config: { numberOfImages: 1, outputMimeType: 'image/jpeg' },
+                systemInstruction: { parts: [{ text: systemInstruction }] },
+                contents: [{
+                    role: 'user', parts: [
+                        { text: `Templates:\n${JSON.stringify(templatesData)}\n\nUser Query: ${prompt}` }
+                    ]
+                }],
+                generationConfig: { responseMimeType: 'application/json' },
             };
         } else {
             return res.status(400).json({ error: 'Unsupported action.' });
@@ -268,8 +304,51 @@ app.post('/api/gemini', async (req, res) => {
             }
             responsePayload = { text: textResult, imageBase64: imageResult };
         } else if (action === 'generate') {
-            const imageBase64 = data?.generatedImages?.[0]?.image?.imageBytes ?? null;
-            responsePayload = { text: null, imageBase64 };
+            // Imagen format: generatedImages[].image.imageBytes
+            const imagenBytes = data?.generatedImages?.[0]?.image?.imageBytes;
+            if (imagenBytes) {
+                responsePayload = { text: null, imageBase64: imagenBytes };
+            } else {
+                // generateContent format: candidates[].content.parts[] with inlineData
+                const candidate = data?.candidates?.[0];
+                const contentParts = candidate?.content?.parts;
+                let textResult = null;
+                let imageResult = null;
+                if (Array.isArray(contentParts)) {
+                    for (const part of contentParts) {
+                        if (part.text) textResult = part.text;
+                        else if (part.inlineData?.data) imageResult = part.inlineData.data;
+                    }
+                }
+                responsePayload = { text: textResult, imageBase64: imageResult };
+            }
+        } else if (action === 'search') {
+            const candidate = data?.candidates?.[0];
+            let textResult = candidate?.content?.parts?.[0]?.text;
+            let ids = [];
+            if (textResult) {
+                try {
+                    // Strip markdown code blocks if present
+                    const cleaned = textResult.replace(/```[\w]*\n?/g, '').trim();
+                    // Try to find a JSON array in the response
+                    const arrayMatch = cleaned.match(/\[[\d\s,]*\]/);
+                    if (arrayMatch) {
+                        ids = JSON.parse(arrayMatch[0]);
+                    } else {
+                        ids = JSON.parse(cleaned);
+                    }
+                    if (!Array.isArray(ids)) ids = [];
+                    ids = ids.filter(id => typeof id === 'number');
+                } catch (e) {
+                    // Fallback: extract all numbers that look like IDs from the text
+                    const numMatches = textResult.match(/\b(\d{1,4})\b/g);
+                    if (numMatches) {
+                        ids = [...new Set(numMatches.map(Number))].slice(0, 20);
+                    }
+                    console.error('Search: JSON parse failed, extracted IDs from text:', ids);
+                }
+            }
+            responsePayload = { ids };
         }
 
         res.json(responsePayload);

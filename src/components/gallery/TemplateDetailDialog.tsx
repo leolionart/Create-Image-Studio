@@ -53,7 +53,7 @@ const TemplateDetailDialog: React.FC<TemplateDetailDialogProps> = ({ template, i
           <div className="flex-1 min-w-0 pr-4">
             <h2 className="text-[22px] font-normal text-on-surface leading-7 mb-2">{template.title}</h2>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-on-surface-variant">@{template.author}</span>
+              <span className="text-sm text-on-surface-variant">{template.author.startsWith('@') ? template.author : `@${template.author}`}</span>
               <span className="h-6 inline-flex items-center px-2.5 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-medium tracking-wide">
                 {template.category}
               </span>

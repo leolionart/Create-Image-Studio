@@ -11,6 +11,7 @@ import TryItDialog from './components/gallery/TryItDialog';
 import SettingsModal from './components/shared/SettingsModal';
 import SubmitPromptDialog from './components/gallery/SubmitPromptDialog';
 import AdminDialog from './components/shared/AdminDialog';
+import LLMSearchDialog from './components/shared/LLMSearchDialog';
 
 const App: React.FC = () => {
   // Template data
@@ -19,7 +20,6 @@ const App: React.FC = () => {
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
 
   // Gallery filter state
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
 
   // Dialog state
@@ -40,7 +40,21 @@ const App: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [hasCustomApi, setHasCustomApi] = useState(false);
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Check if custom API is configured
   useEffect(() => {
@@ -74,17 +88,8 @@ const App: React.FC = () => {
     if (activeCategory !== 'All') {
       result = result.filter(t => t.category === activeCategory);
     }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(t =>
-        t.title.toLowerCase().includes(q) ||
-        t.author.toLowerCase().includes(q) ||
-        t.category.toLowerCase().includes(q) ||
-        t.prompt.toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [templates, activeCategory, searchQuery]);
+    return [...result].reverse();
+  }, [templates, activeCategory]);
 
   // Gallery handlers
   const handleOpenDetail = useCallback((template: Template) => {
@@ -190,10 +195,9 @@ const App: React.FC = () => {
           categories={categories}
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
           templateCounts={templateCounts}
           totalCount={templates.length}
+          onOpenAISearch={() => setSearchOpen(true)}
         />
         <GalleryGrid
           templates={filtered}
@@ -239,6 +243,13 @@ const App: React.FC = () => {
       />
 
       <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+      <LLMSearchDialog
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        templates={templates}
+        onSelectTemplate={handleOpenDetail}
+      />
     </>
   );
 };

@@ -14,6 +14,7 @@ const extractGeminiErrorMessage = (error: unknown): string | null => {
 type GeminiResponse = {
     text: string | null;
     imageBase64: string | null;
+    ids?: number[];
 };
 
 interface EditImageRequest {
@@ -27,11 +28,20 @@ interface GenerateImageRequest {
     prompt: string;
 }
 
-type GeminiRequest = EditImageRequest | GenerateImageRequest;
+interface SearchTemplatesRequest {
+    action: 'search';
+    prompt: string;
+    templatesData: any[];
+}
+
+type GeminiRequest = EditImageRequest | GenerateImageRequest | SearchTemplatesRequest;
 
 export interface ApiSettings {
     apiKey: string;
     baseUrl: string;
+    editModel: string;
+    generateModel: string;
+    searchModel: string;
 }
 
 const SETTINGS_KEY = 'cis-api-settings';
@@ -40,8 +50,8 @@ export const loadApiSettings = (): ApiSettings => {
     try {
         const stored = localStorage.getItem(SETTINGS_KEY);
         if (stored) return JSON.parse(stored);
-    } catch {}
-    return { apiKey: '', baseUrl: '' };
+    } catch { }
+    return { apiKey: '', baseUrl: '', editModel: '', generateModel: '', searchModel: '' };
 };
 
 export const saveApiSettings = (settings: ApiSettings): void => {
@@ -55,6 +65,9 @@ const callGemini = async (payload: GeminiRequest): Promise<GeminiResponse> => {
     };
     if (settings.apiKey) headers['x-api-key'] = settings.apiKey;
     if (settings.baseUrl) headers['x-base-url'] = settings.baseUrl;
+    if (settings.editModel) headers['x-edit-model'] = settings.editModel;
+    if (settings.generateModel) headers['x-generate-model'] = settings.generateModel;
+    if (settings.searchModel) headers['x-search-model'] = settings.searchModel;
 
     try {
         const response = await fetch('/api/gemini', {
@@ -73,6 +86,7 @@ const callGemini = async (payload: GeminiRequest): Promise<GeminiResponse> => {
         return {
             text: data?.text ?? null,
             imageBase64: data?.imageBase64 ?? null,
+            ids: data?.ids ?? [],
         };
     } catch (error) {
         console.error('Error calling Gemini API via proxy:', error);
@@ -101,4 +115,16 @@ export const generateImageFromText = async (
         action: 'generate',
         prompt,
     });
+};
+
+export const searchTemplates = async (
+    query: string,
+    templatesData: any[]
+): Promise<number[]> => {
+    const response = await callGemini({
+        action: 'search',
+        prompt: query,
+        templatesData,
+    }) as any;
+    return response.ids || [];
 };

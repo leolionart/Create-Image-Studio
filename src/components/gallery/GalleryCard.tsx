@@ -142,7 +142,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index }) 
               Community
             </span>
           )}
-          <span className="text-xs text-on-surface-variant">@{template.author}</span>
+          <span className="text-xs text-on-surface-variant">{template.author.startsWith('@') ? template.author : `@${template.author}`}</span>
           {template.inputsNeeded > 0 && (
             <span className="ml-auto text-[11px] text-outline flex items-center gap-0.5">
               <span className="material-symbols-outlined" style={{ fontSize: 14 }}>photo_library</span>
