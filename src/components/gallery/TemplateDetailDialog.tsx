@@ -174,7 +174,7 @@ const TemplateDetailDialog: React.FC<TemplateDetailDialogProps> = ({ template, i
           {/* Copy Prompt - Primary filled */}
           <button
             onClick={handleCopyPrompt}
-            className="h-12 px-8 flex items-center gap-2.5 rounded-full bg-primary text-on-primary font-medium text-sm shadow-elevation-1 hover:shadow-elevation-2 hover:-translate-y-0.5 active:scale-[0.97] active:shadow-none transition-all duration-300 ease-spring"
+            className="h-12 px-8 flex items-center gap-2.5 rounded-full bg-primary text-on-primary font-medium text-sm shadow-elevation-1 hover:shadow-elevation-2 hover:-translate-y-0.5 active:scale-[0.97] active:shadow-none transition-card"
           >
             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
               {copied ? 'check' : 'content_copy'}
@@ -185,7 +185,7 @@ const TemplateDetailDialog: React.FC<TemplateDetailDialogProps> = ({ template, i
           {/* Try It - Secondary tonal */}
           <button
             onClick={onTryIt}
-            className="h-12 px-8 flex items-center gap-2.5 rounded-full bg-secondary-container text-on-secondary-container font-medium text-sm hover:shadow-elevation-1 hover:-translate-y-0.5 active:scale-[0.97] transition-all duration-300 ease-spring"
+            className="h-12 px-8 flex items-center gap-2.5 rounded-full bg-secondary-container text-on-secondary-container font-medium text-sm hover:shadow-elevation-1 hover:-translate-y-0.5 active:scale-[0.97] transition-card"
           >
             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>play_arrow</span>
             Try It

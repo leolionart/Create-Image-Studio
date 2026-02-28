@@ -192,7 +192,7 @@ const AdminDialog: React.FC<AdminDialogProps> = ({ isOpen, onClose, onTemplateDe
                 <button
                   onClick={handleLogin}
                   disabled={!password.trim() || isLoggingIn}
-                  className="h-12 px-8 w-full flex items-center justify-center gap-2 rounded-full bg-primary text-on-primary font-medium text-sm shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-300 ease-spring disabled:opacity-40 disabled:pointer-events-none"
+                  className="h-12 px-8 w-full flex items-center justify-center gap-2 rounded-full bg-primary text-on-primary font-medium text-sm shadow-elevation-1 hover:shadow-elevation-2 transition-card disabled:opacity-40 disabled:pointer-events-none"
                 >
                   {isLoggingIn ? 'Đang xác thực...' : 'Đăng nhập'}
                 </button>

@@ -284,7 +284,7 @@ const SubmitPromptDialog: React.FC<SubmitPromptDialogProps> = ({ isOpen, onClose
               <button
                 onClick={handleSubmit}
                 disabled={!isValid || isSubmitting}
-                className="h-12 px-8 flex items-center gap-2.5 rounded-full bg-primary text-on-primary font-medium text-sm shadow-elevation-1 hover:shadow-elevation-2 hover:-translate-y-0.5 active:scale-[0.97] active:shadow-none transition-all duration-300 ease-spring disabled:opacity-40 disabled:pointer-events-none ml-auto"
+                className="h-12 px-8 flex items-center gap-2.5 rounded-full bg-primary text-on-primary font-medium text-sm shadow-elevation-1 hover:shadow-elevation-2 hover:-translate-y-0.5 active:scale-[0.97] active:shadow-none transition-card disabled:opacity-40 disabled:pointer-events-none ml-auto"
               >
                 {isSubmitting ? (
                   <>

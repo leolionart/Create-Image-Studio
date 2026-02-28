@@ -32,7 +32,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index }) 
       tabIndex={0}
       onClick={() => onSelect(template)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(template); } }}
-      className="group relative cursor-pointer rounded-3xl overflow-hidden bg-surface-container shadow-elevation-1 transition-[transform,box-shadow] duration-300 ease-spring hover:-translate-y-1.5 hover:shadow-elevation-2 active:scale-[0.97] active:shadow-none active:duration-100 active:ease-out focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 animate-card-in"
+      className="group relative cursor-pointer rounded-3xl overflow-hidden bg-surface-container shadow-elevation-1 transition-card hover:-translate-y-1.5 hover:shadow-elevation-2 active:scale-[0.97] active:shadow-none focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 animate-card-in"
       style={{ animationDelay: `${Math.min(index * 50, 400)}ms` }}
     >
       {/* === Image Section === */}

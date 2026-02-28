@@ -22,7 +22,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
   const ChipButton = ({ label, count, isActive, onClick }: { key?: React.Key; label: string; count: number; isActive: boolean; onClick: () => void }) => (
     <button
       onClick={onClick}
-      className={`h-8 px-4 inline-flex items-center gap-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ease-spring shrink-0 ${
+      className={`h-8 px-4 inline-flex items-center gap-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors duration-200 shrink-0 ${
         isActive
           ? 'bg-secondary-container text-on-secondary-container shadow-sm'
           : 'bg-transparent border border-outline-variant text-on-surface-variant hover:bg-on-surface/[0.08] active:bg-on-surface/[0.12]'
