@@ -1157,7 +1157,7 @@
       "/input-images/case96-input1.png"
     ],
     "outputImage": "/card-previews/create-constellation-image.png",
-    "prompt": "Create an image depicting fictional constellations using the original image as a reference. A photorealistic starry sky. People, animals, and objects extracted from the original image are placed transparently against the starry sky background. An imaginary constellation is created based on the placed motif, made up of approximately 5 to 10 stars.",
+    "prompt": "Create a fictional constellation in a photorealistic starry sky based on the logo in the input image. The logo should be extracted and rendered as a glowing constellation made of 5-10 bright stars connected by faint lines, maintaining the exact shape and proportions of the original logo. Cinematic night sky background.",
     "inputsNeeded": 1
   },
   {
