@@ -9,6 +9,8 @@ import GalleryGrid from './components/gallery/GalleryGrid';
 import TemplateDetailDialog from './components/gallery/TemplateDetailDialog';
 import TryItDialog from './components/gallery/TryItDialog';
 import SettingsModal from './components/shared/SettingsModal';
+import SubmitPromptDialog from './components/gallery/SubmitPromptDialog';
+import AdminDialog from './components/shared/AdminDialog';
 
 const App: React.FC = () => {
   // Template data
@@ -36,6 +38,8 @@ const App: React.FC = () => {
 
   // UI state
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const [hasCustomApi, setHasCustomApi] = useState(false);
 
   // Check if custom API is configured
@@ -160,10 +164,26 @@ const App: React.FC = () => {
     }
   }, [canGenerate, selectedTemplate, uploadedImages, prompt]);
 
+  // Admin delete handler
+  const handleTemplateDeleted = useCallback((id: number) => {
+    setTemplates(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  // Share prompt handler
+  const handleSubmitSuccess = useCallback((newTemplate: Template) => {
+    setTemplates(prev => [...prev, { ...newTemplate, source: 'custom' }]);
+    setCategories(prev => {
+      const updated = [...new Set([...prev, newTemplate.category])].sort();
+      return updated;
+    });
+  }, []);
+
   return (
     <>
       <GalleryShell
         onOpenSettings={() => setSettingsOpen(true)}
+        onSharePrompt={() => setShareOpen(true)}
+        onOpenAdmin={() => setAdminOpen(true)}
         hasCustomApi={hasCustomApi}
       >
         <FilterBar
@@ -203,6 +223,19 @@ const App: React.FC = () => {
         isGenerating={isGenerating}
         result={result}
         error={error}
+      />
+
+      <SubmitPromptDialog
+        isOpen={shareOpen}
+        onClose={() => setShareOpen(false)}
+        categories={categories}
+        onSubmitSuccess={handleSubmitSuccess}
+      />
+
+      <AdminDialog
+        isOpen={adminOpen}
+        onClose={() => setAdminOpen(false)}
+        onTemplateDeleted={handleTemplateDeleted}
       />
 
       <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />

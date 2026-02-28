@@ -30,3 +30,6 @@ screenshot-*.png
 
 # Playwright MCP
 .playwright-mcp/
+
+# Community uploaded images
+public/community/

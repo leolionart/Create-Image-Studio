@@ -57,6 +57,12 @@ const TemplateDetailDialog: React.FC<TemplateDetailDialogProps> = ({ template, i
               <span className="h-6 inline-flex items-center px-2.5 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-medium tracking-wide">
                 {template.category}
               </span>
+              {template.source === 'custom' && (
+                <span className="h-6 inline-flex items-center gap-1 px-2.5 rounded-full bg-tertiary-container text-on-tertiary-container text-[11px] font-medium tracking-wide">
+                  <span className="material-symbols-outlined" style={{ fontSize: 12 }}>group</span>
+                  Community
+                </span>
+              )}
               {template.inputsNeeded > 0 && (
                 <span className="h-6 inline-flex items-center gap-1 px-2.5 rounded-full bg-surface-container-highest text-on-surface-variant text-[11px] font-medium">
                   <span className="material-symbols-outlined" style={{ fontSize: 14 }}>photo_library</span>

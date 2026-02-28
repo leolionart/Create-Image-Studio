@@ -136,6 +136,12 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ template, onSelect, index }) 
           <span className="h-6 inline-flex items-center px-2.5 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-medium tracking-wide">
             {template.category}
           </span>
+          {template.source === 'custom' && (
+            <span className="h-6 inline-flex items-center gap-1 px-2.5 rounded-full bg-tertiary-container text-on-tertiary-container text-[11px] font-medium tracking-wide">
+              <span className="material-symbols-outlined" style={{ fontSize: 12 }}>group</span>
+              Community
+            </span>
+          )}
           <span className="text-xs text-on-surface-variant">@{template.author}</span>
           {template.inputsNeeded > 0 && (
             <span className="ml-auto text-[11px] text-outline flex items-center gap-0.5">
