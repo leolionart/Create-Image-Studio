@@ -16,7 +16,9 @@ const LLMSearchDialog: React.FC<LLMSearchDialogProps> = ({ isOpen, onClose, temp
     const [results, setResults] = useState<Template[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [searchPhase, setSearchPhase] = useState(0);
+    const [hasSearched, setHasSearched] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -24,8 +26,33 @@ const LLMSearchDialog: React.FC<LLMSearchDialogProps> = ({ isOpen, onClose, temp
             setQuery('');
             setResults([]);
             setError(null);
+            setHasSearched(false);
         }
     }, [isOpen]);
+
+    // Auto-search after 3 seconds of inactivity
+    useEffect(() => {
+        if (!query.trim()) {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
+            return;
+        }
+
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+
+        debounceTimerRef.current = setTimeout(() => {
+            handleSearch();
+        }, 3000);
+
+        return () => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
+        };
+    }, [query]);
 
     // Cycle through search phases while searching
     useEffect(() => {
@@ -52,6 +79,7 @@ const LLMSearchDialog: React.FC<LLMSearchDialogProps> = ({ isOpen, onClose, temp
 
         setIsSearching(true);
         setError(null);
+        setHasSearched(true);
 
         try {
             const compactTemplates = templates.map(t => ({
@@ -85,6 +113,44 @@ const LLMSearchDialog: React.FC<LLMSearchDialogProps> = ({ isOpen, onClose, temp
         onSelectTemplate(template);
     };
 
+    const handleSuggestionClick = async (suggestion: string) => {
+        setQuery(suggestion);
+        // Clear existing timer
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+        // Trigger search immediately
+        setIsSearching(true);
+        setError(null);
+        setHasSearched(true);
+
+        try {
+            const compactTemplates = templates.map(t => ({
+                id: t.id,
+                title: t.title,
+                prompt: t.prompt,
+                category: t.category
+            }));
+
+            const matchedIds = await searchTemplates(suggestion, compactTemplates);
+
+            if (Array.isArray(matchedIds) && matchedIds.length > 0) {
+                const matchedTemplates = matchedIds
+                    .map(id => templates.find(t => t.id === id))
+                    .filter((t): t is Template => t !== undefined);
+                setResults(matchedTemplates);
+            } else {
+                setResults([]);
+            }
+        } catch (err: any) {
+            console.error('Search error:', err);
+            setError(err.message || 'Failed to search templates');
+            setResults([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -102,7 +168,7 @@ const LLMSearchDialog: React.FC<LLMSearchDialogProps> = ({ isOpen, onClose, temp
                         ref={inputRef}
                         type="text"
                         className="flex-1 bg-transparent border-none text-on-surface text-lg sm:text-xl py-4 px-2 focus:outline-none placeholder:text-outline"
-                        placeholder="Mô tả hình ảnh bạn muốn tạo..."
+                        placeholder="Tìm prompt AI... (tự động tìm sau 3s hoặc bấm Enter)"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                     />
@@ -175,17 +241,35 @@ const LLMSearchDialog: React.FC<LLMSearchDialogProps> = ({ isOpen, onClose, temp
                         </div>
                     )}
 
-                    {!error && !isSearching && results.length === 0 && query.trim() && (
+                    {!error && !isSearching && results.length === 0 && query.trim() && hasSearched && (
                         <div className="text-center text-on-surface-variant py-8 text-sm">
                             Không tìm thấy kết quả phù hợp với "{query}". Thử cách diễn đạt khác.
                         </div>
                     )}
 
                     {!error && !isSearching && results.length === 0 && !query.trim() && (
-                        <div className="text-center text-on-surface-variant/60 py-12 flex flex-col items-center">
-                            <span className="material-symbols-outlined text-primary/40 mb-4" style={{ fontSize: 48 }}>auto_awesome</span>
-                            <p className="text-lg text-on-surface-variant">Tìm kiếm thông minh với AI</p>
-                            <p className="text-sm mt-1 text-outline">Tìm prompt chỉ bằng cách mô tả những gì bạn muốn</p>
+                        <div className="py-8 flex flex-col gap-6">
+                            <div className="text-center text-on-surface-variant/60 flex flex-col items-center">
+                                <span className="material-symbols-outlined text-primary/40 mb-3" style={{ fontSize: 40 }}>auto_awesome</span>
+                                <p className="text-base text-on-surface-variant">Tìm kiếm thông minh với AI</p>
+                                <p className="text-sm mt-1 text-outline">Gợi ý một số prompt bạn có thể tìm</p>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-2">
+                                {[
+                                    'Thiết kế nội thất phòng khách',
+                                    'Portrait phong cách Pixar',
+                                    'Tường gạch nền ngoài trời',
+                                    'Mô phỏng sản phẩm 3D'
+                                ].map((suggestion, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleSuggestionClick(suggestion)}
+                                        className="p-3 rounded-lg bg-surface-container/50 hover:bg-surface-container border border-outline-variant/30 hover:border-outline-variant/60 text-on-surface-variant hover:text-on-surface text-sm text-left transition-colors"
+                                    >
+                                        <span className="inline-block mr-2">✨</span>{suggestion}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     )}
 
@@ -207,7 +291,7 @@ const LLMSearchDialog: React.FC<LLMSearchDialogProps> = ({ isOpen, onClose, temp
                 <div className="px-6 py-3 border-t border-outline-variant/50 bg-surface-container-high flex justify-between items-center text-xs text-on-surface-variant">
                     <div className="flex gap-4">
                         <span className="flex items-center gap-1">
-                            <kbd className="bg-surface-container px-1.5 py-0.5 rounded border border-outline-variant/50 text-[10px] font-mono">Enter</kbd> để tìm
+                            <kbd className="bg-surface-container px-1.5 py-0.5 rounded border border-outline-variant/50 text-[10px] font-mono">Enter</kbd> hoặc đợi 3s
                         </span>
                         <span className="flex items-center gap-1">
                             <kbd className="bg-surface-container px-1.5 py-0.5 rounded border border-outline-variant/50 text-[10px] font-mono">ESC</kbd> để đóng
